@@ -1,4 +1,6 @@
 /* Modal.css */
+body.modal-open { overflow: hidden; }
+
 .modal-backdrop {
   position: fixed;
   inset: 0;

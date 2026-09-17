@@ -1,0 +1,22 @@
+.task-modal-form { display: flex; flex-direction: column; gap: 14px; }
+.task-priority-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.task-priority-btn { padding: 8px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-secondary); font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
+.task-priority-btn.is-selected { border-color: var(--priority-color); background: var(--priority-bg); color: var(--priority-color); }
+.task-priority-btn.priority-alta { --priority-color: #ef4444; --priority-bg: rgba(239, 68, 68, 0.12); }
+.task-priority-btn.priority-media { --priority-color: #f59e0b; --priority-bg: rgba(245, 158, 11, 0.12); }
+.task-priority-btn.priority-baja { --priority-color: #10b981; --priority-bg: rgba(16, 185, 129, 0.12); }
+.task-priority-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--priority-color); }
+.task-category-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.task-category-btn { padding: 6px 10px; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-secondary); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.task-category-btn.is-selected { border-color: var(--category-color); background: var(--category-bg); color: var(--category-color); font-weight: 700; }
+.task-category-btn.category-trabajo { --category-color: #6366f1; --category-bg: rgba(99, 102, 241, 0.12); }
+.task-category-btn.category-personal { --category-color: #ec4899; --category-bg: rgba(236, 72, 153, 0.12); }
+.task-category-btn.category-estudio { --category-color: #8b5cf6; --category-bg: rgba(139, 92, 246, 0.12); }
+.task-category-btn.category-ideas { --category-color: #06b6d4; --category-bg: rgba(6, 182, 212, 0.12); }
+.task-category-btn.category-compras { --category-color: #10b981; --category-bg: rgba(16, 185, 129, 0.12); }
+.task-category-btn.category-salud { --category-color: #f43f5e; --category-bg: rgba(244, 63, 94, 0.12); }
+.task-subtask-input-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.task-add-subtask-btn { flex-shrink: 0; padding: 0 12px; }
+.task-subtask-list { display: flex; flex-direction: column; gap: 6px; }
+.task-subtask-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--bg-input); font-size: 13px; }
+.task-remove-subtask-btn { background: none; border: none; color: #ef4444; cursor: pointer; display: flex; }

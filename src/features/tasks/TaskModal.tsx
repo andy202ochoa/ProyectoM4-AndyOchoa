@@ -3,6 +3,7 @@ import { Task, TaskCategory, TaskPriority } from '../../types';
 import { Modal } from '../../components/common/Modal';
 import { CATEGORY_CONFIG, getTodayDateString, PRIORITY_CONFIG } from '../../utils';
 import { PlusIcon, TrashIcon } from '../../components/common/Icons';
+import './TaskModal.css';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -95,14 +96,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             className="btn btn-primary"
             onClick={handleSubmit}
             disabled={!title.trim()}
-            style={{ opacity: !title.trim() ? 0.6 : 1 }}
           >
             {initialTask ? 'Guardar Cambios' : 'Crear Tarea'}
           </button>
         </>
       }
     >
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <form onSubmit={handleSubmit} className="task-modal-form">
         {/* Título */}
         <div className="form-group">
           <label className="form-label" htmlFor="task-title">
@@ -152,7 +152,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         {/* Prioridad */}
         <div className="form-group">
           <label className="form-label">Prioridad</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+          <div className="task-priority-options">
             {priorities.map((p) => {
               const config = PRIORITY_CONFIG[p];
               const isSelected = priority === p;
@@ -161,24 +161,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   key={p}
                   type="button"
                   onClick={() => setPriority(p)}
-                  style={{
-                    padding: '8px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid',
-                    borderColor: isSelected ? config.color : 'var(--border-color)',
-                    backgroundColor: isSelected ? config.bg : 'var(--bg-input)',
-                    color: isSelected ? config.color : 'var(--text-secondary)',
-                    fontWeight: 600,
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    transition: 'all 0.2s',
-                  }}
+                  className={`task-priority-btn priority-${p} ${isSelected ? 'is-selected' : ''}`}
                 >
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: config.color }} />
+                  <span className="task-priority-dot" />
                   {config.label}
                 </button>
               );
@@ -189,13 +174,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         {/* Categoría */}
         <div className="form-group">
           <label className="form-label">Categoría</label>
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '6px',
-            }}
-          >
+          <div className="task-category-options">
             {categories.map((cat) => {
               const conf = CATEGORY_CONFIG[cat];
               const isSelected = category === cat;
@@ -204,20 +183,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   key={cat}
                   type="button"
                   onClick={() => setCategory(cat)}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: 'var(--radius-full)',
-                    border: '1px solid',
-                    borderColor: isSelected ? conf.color : 'var(--border-color)',
-                    backgroundColor: isSelected ? `${conf.color}20` : 'var(--bg-input)',
-                    color: isSelected ? conf.color : 'var(--text-secondary)',
-                    fontSize: '12px',
-                    fontWeight: isSelected ? 700 : 500,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                  }}
+                  className={`task-category-btn category-${cat} ${isSelected ? 'is-selected' : ''}`}
                 >
                   <span>{conf.icon}</span>
                   <span>{conf.label}</span>
@@ -230,7 +196,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         {/* Subtareas */}
         <div className="form-group">
           <label className="form-label">Subtareas / Pasos</label>
-          <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+          <div className="task-subtask-input-row">
             <input
               type="text"
               className="form-input"
@@ -246,40 +212,25 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             />
             <button
               type="button"
-              className="btn btn-secondary"
               onClick={handleAddSubtask}
-              style={{ flexShrink: 0, padding: '0 12px' }}
+              className="btn btn-secondary task-add-subtask-btn"
             >
               <PlusIcon size={16} />
             </button>
           </div>
 
           {subtasks.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div className="task-subtask-list">
               {subtasks.map((st, idx) => (
                 <div
                   key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '6px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    backgroundColor: 'var(--bg-input)',
-                    fontSize: '13px',
-                  }}
+                  className="task-subtask-row"
                 >
                   <span>• {st.title}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveSubtask(idx)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#ef4444',
-                      cursor: 'pointer',
-                      display: 'flex',
-                    }}
+                    className="task-remove-subtask-btn"
                   >
                     <TrashIcon size={14} />
                   </button>

@@ -4,6 +4,7 @@ import { useNotes } from '../hooks/useNotes';
 import { NoteCard, NoteModal } from '../features/notes';
 import { NotesIcon, PinIcon, PlusIcon, TagIcon } from '../components/common/Icons';
 import { NOTE_COLOR_CONFIG } from '../utils';
+import './NotesPage.css';
 
 interface NotesPageProps {
   noteHook: ReturnType<typeof useNotes>;
@@ -51,30 +52,20 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
   const hasNotes = pinnedNotes.length > 0 || otherNotes.length > 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="notes-page">
       {/* Banner de Notas */}
       <div
-        style={{
-          background: 'var(--accent-gradient)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '16px 18px',
-          color: '#ffffff',
-          marginBottom: '14px',
-          boxShadow: 'var(--shadow-md)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
+        className="notes-page-banner"
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', opacity: 0.9 }}>
+          <div className="notes-banner-kicker">
             <NotesIcon size={14} />
             <span>Bloc de Notas Rápido</span>
           </div>
-          <h2 style={{ fontSize: '17px', fontWeight: 700, marginTop: '2px' }}>
+          <h2 className="notes-banner-title">
             {totalNotesCount} nota{totalNotesCount === 1 ? '' : 's'} guardada{totalNotesCount === 1 ? '' : 's'}
           </h2>
-          <p style={{ fontSize: '12px', opacity: 0.85, marginTop: '2px' }}>
+          <p className="notes-banner-subtitle">
             {pinnedNotes.length} fijada{pinnedNotes.length === 1 ? '' : 's'} para acceso rápido
           </p>
         </div>
@@ -82,20 +73,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
         <button
           type="button"
           onClick={handleOpenCreate}
-          style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            border: '1px solid rgba(255, 255, 255, 0.35)',
-            color: '#ffffff',
-            padding: '8px 12px',
-            borderRadius: 'var(--radius-full)',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            backdropFilter: 'blur(10px)',
-          }}
+          className="notes-banner-action"
         >
           <PlusIcon size={14} />
           <span>Nota</span>
@@ -105,30 +83,12 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
       {/* Filtro deslizante por Etiquetas */}
       {allTags.length > 0 && (
         <div
-          style={{
-            display: 'flex',
-            gap: '6px',
-            overflowX: 'auto',
-            paddingBottom: '8px',
-            marginBottom: '6px',
-            scrollbarWidth: 'none',
-          }}
+          className="notes-tag-filter"
         >
           <button
             type="button"
             onClick={() => setSelectedTag(null)}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 'var(--radius-full)',
-              border: '1px solid',
-              borderColor: selectedTag === null ? 'var(--primary)' : 'var(--border-color)',
-              backgroundColor: selectedTag === null ? 'var(--primary)' : 'var(--bg-surface-elevated)',
-              color: selectedTag === null ? '#ffffff' : 'var(--text-secondary)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
+            className={`notes-filter-btn ${selectedTag === null ? 'is-selected' : ''}`}
           >
             Todas
           </button>
@@ -139,21 +99,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
                 key={tag}
                 type="button"
                 onClick={() => setSelectedTag(isSelected ? null : tag)}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  border: '1px solid',
-                  borderColor: isSelected ? 'var(--primary)' : 'var(--border-color)',
-                  backgroundColor: isSelected ? 'var(--primary)' : 'var(--bg-surface-elevated)',
-                  color: isSelected ? '#ffffff' : 'var(--text-secondary)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  flexShrink: 0,
-                }}
+                className={`notes-filter-btn ${isSelected ? 'is-selected' : ''}`}
               >
                 <TagIcon size={12} />
                 #{tag}
@@ -165,28 +111,12 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
 
       {/* Filtro por Paleta de Color */}
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          marginBottom: '14px',
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-        }}
+        className="notes-color-filter"
       >
         <button
           type="button"
           onClick={() => setSelectedColor('todos')}
-          style={{
-            background: selectedColor === 'todos' ? 'var(--bg-input)' : 'transparent',
-            border: selectedColor === 'todos' ? '1px solid var(--border-color)' : 'none',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '11px',
-            color: 'var(--text-muted)',
-            fontWeight: 600,
-            padding: '2px 6px',
-            cursor: 'pointer',
-          }}
+          className={`notes-color-label ${selectedColor === 'todos' ? 'is-selected' : ''}`}
         >
           Colores:
         </button>
@@ -199,49 +129,26 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
               type="button"
               onClick={() => setSelectedColor(isSelected ? 'todos' : c)}
               title={conf.name}
-              style={{
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                backgroundColor: conf.accent,
-                border: isSelected ? '2px solid var(--text-primary)' : '1px solid transparent',
-                cursor: 'pointer',
-                transform: isSelected ? 'scale(1.2)' : 'scale(1)',
-                transition: 'transform 0.15s ease',
-              }}
+              className={`notes-color-btn note-color-${c} ${isSelected ? 'is-selected' : ''}`}
             />
           );
         })}
       </div>
 
       {/* Listado de Notas */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="notes-list">
         {/* Sección de Notas Fijadas */}
         {pinnedNotes.length > 0 && (
           <div>
             <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '12px',
-                fontWeight: 700,
-                color: 'var(--text-secondary)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                marginBottom: '8px',
-              }}
+              className="notes-section-title"
             >
-              <PinIcon size={14} filled style={{ color: 'var(--primary)' }} />
+              <PinIcon size={14} filled />
               <span>Fijadas ({pinnedNotes.length})</span>
             </div>
 
             <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: '10px',
-              }}
+              className="notes-grid"
             >
               {pinnedNotes.map((note) => (
                 <NoteCard
@@ -262,25 +169,14 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
           <div>
             {pinnedNotes.length > 0 && (
               <div
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  marginBottom: '8px',
-                }}
+                className="notes-section-title is-secondary"
               >
                 Otras notas ({otherNotes.length})
               </div>
             )}
 
             <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: '10px',
-              }}
+              className="notes-grid"
             >
               {otherNotes.map((note) => (
                 <NoteCard
@@ -299,36 +195,19 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
         {/* Estado Vacío */}
         {!hasNotes && (
           <div
-            style={{
-              padding: '40px 20px',
-              textAlign: 'center',
-              backgroundColor: 'var(--bg-surface-elevated)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px dashed var(--border-color)',
-              marginTop: '10px',
-            }}
+            className="notes-empty-state"
           >
             <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                backgroundColor: 'rgba(236, 72, 153, 0.15)',
-                color: '#ec4899',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 12px',
-              }}
+              className="notes-empty-icon"
             >
               <NotesIcon size={24} />
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+            <h3 className="notes-empty-title">
               {searchQuery || selectedTag || selectedColor !== 'todos'
                 ? 'No hay notas con estos filtros'
                 : 'Tu bloc de notas está vacío'}
             </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+            <p className="notes-empty-description">
               {searchQuery || selectedTag || selectedColor !== 'todos'
                 ? 'Prueba limpiando los filtros o realizando otra búsqueda.'
                 : 'Guarda pensamientos rápidos, enlaces, fragmentos de código o listas de ideas.'}

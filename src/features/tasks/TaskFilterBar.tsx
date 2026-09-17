@@ -73,7 +73,7 @@ export const TaskFilterBar: React.FC<TaskFilterBarProps> = ({
               className={`task-filter-priority-btn ${isSelected ? 'is-selected' : ''}`}
             >
               {p.color && (
-                <span className="task-filter-priority-dot" style={{ backgroundColor: p.color }} />
+                <span className={`task-filter-priority-dot priority-${p.id}`} />
               )}
               {p.label}
             </button>

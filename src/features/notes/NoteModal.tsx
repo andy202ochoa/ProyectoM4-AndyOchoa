@@ -4,6 +4,7 @@ import { Modal } from '../../components/common/Modal';
 import { NOTE_COLOR_CONFIG } from '../../utils';
 import { CheckIcon, PinIcon, PlusIcon } from '../../components/common/Icons';
 import { TagBadge } from '../../components/common/Badge';
+import './NoteModal.css';
 
 interface NoteModalProps {
   isOpen: boolean;
@@ -91,14 +92,13 @@ export const NoteModal: React.FC<NoteModalProps> = ({
             className="btn btn-primary"
             onClick={handleSubmit}
             disabled={!title.trim() && !content.trim()}
-            style={{ opacity: !title.trim() && !content.trim() ? 0.6 : 1 }}
           >
             {initialNote ? 'Guardar Cambios' : 'Crear Nota'}
           </button>
         </>
       }
     >
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <form onSubmit={handleSubmit} className="note-modal-form">
         {/* Título */}
         <div className="form-group">
           <label className="form-label" htmlFor="note-title">
@@ -122,8 +122,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
           </label>
           <textarea
             id="note-content"
-            className="form-textarea"
-            style={{ minHeight: '120px' }}
+            className="form-textarea note-content-input"
             placeholder="Escribe tus notas, listas, apuntes o enlaces aquí..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -133,7 +132,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
         {/* Paleta de Color */}
         <div className="form-group">
           <label className="form-label">Color de la nota</label>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div className="note-color-options">
             {colors.map((c) => {
               const conf = NOTE_COLOR_CONFIG[c];
               const isSelected = color === c;
@@ -143,21 +142,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
                   type="button"
                   onClick={() => setColor(c)}
                   title={conf.name}
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '50%',
-                    backgroundColor: conf.accent,
-                    border: isSelected ? '3px solid var(--text-primary)' : '2px solid transparent',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#ffffff',
-                    boxShadow: isSelected ? 'var(--shadow-md)' : 'none',
-                    transform: isSelected ? 'scale(1.15)' : 'scale(1)',
-                    transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  }}
+                  className={`note-color-btn note-color-${c} ${isSelected ? 'is-selected' : ''}`}
                 >
                   {isSelected && <CheckIcon size={16} />}
                 </button>
@@ -169,33 +154,24 @@ export const NoteModal: React.FC<NoteModalProps> = ({
         {/* Fijar Nota */}
         <div
           onClick={() => setIsPinned(!isPinned)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderRadius: 'var(--radius-md)',
-            backgroundColor: 'var(--bg-input)',
-            border: '1px solid var(--border-color)',
-            cursor: 'pointer',
-          }}
+          className="note-pin-row"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', fontWeight: 600 }}>
-            <PinIcon size={18} filled={isPinned} style={{ color: isPinned ? 'var(--primary)' : 'var(--text-muted)' }} />
+          <div className="note-pin-label">
+            <PinIcon size={18} filled={isPinned} className={isPinned ? 'is-pinned' : ''} />
             <span>Fijar nota en la parte superior</span>
           </div>
           <input
             type="checkbox"
             checked={isPinned}
             onChange={(e) => setIsPinned(e.target.checked)}
-            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+            className="note-pin-checkbox"
           />
         </div>
 
         {/* Etiquetas */}
         <div className="form-group">
           <label className="form-label">Etiquetas / Tags</label>
-          <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+          <div className="note-tag-input-row">
             <input
               type="text"
               className="form-input"
@@ -211,16 +187,15 @@ export const NoteModal: React.FC<NoteModalProps> = ({
             />
             <button
               type="button"
-              className="btn btn-secondary"
               onClick={handleAddTag}
-              style={{ flexShrink: 0, padding: '0 12px' }}
+              className="btn btn-secondary note-add-tag-btn"
             >
               <PlusIcon size={16} />
             </button>
           </div>
 
           {tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <div className="note-tag-list">
               {tags.map((tag) => (
                 <TagBadge key={tag} label={tag} onRemove={() => handleRemoveTag(tag)} />
               ))}

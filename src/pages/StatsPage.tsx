@@ -5,6 +5,7 @@ import { StorageService } from '../services';
 import { CATEGORY_CONFIG, PRIORITY_CONFIG, isOverdue } from '../utils';
 import { ExportIcon, ResetIcon, SparklesIcon, TagIcon } from '../components/common/Icons';
 import { TaskCategory, TaskPriority } from '../types';
+import './StatsPage.css';
 
 interface StatsPageProps {
   taskHook: ReturnType<typeof useTasks>;
@@ -96,25 +97,11 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '10px' }}>
+    <div className="stats-page">
       {/* Toast Notificación */}
       {notification && (
         <div
-          style={{
-            position: 'fixed',
-            top: '74px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: 'var(--primary)',
-            color: '#ffffff',
-            padding: '8px 16px',
-            borderRadius: 'var(--radius-full)',
-            fontSize: '13px',
-            fontWeight: 600,
-            boxShadow: 'var(--shadow-lg)',
-            zIndex: 90,
-            animation: 'fadeIn 0.2s ease',
-          }}
+          className="stats-notification"
         >
           {notification}
         </div>
@@ -122,26 +109,17 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
 
       {/* Tarjeta de Tasa de Productividad */}
       <div
-        style={{
-          background: 'var(--primary-gradient)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '20px',
-          color: '#ffffff',
-          boxShadow: 'var(--shadow-glow)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
+        className="stats-productivity-card"
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', opacity: 0.9 }}>
+          <div className="stats-productivity-kicker">
             <SparklesIcon size={14} />
             <span>Índice de Productividad</span>
           </div>
-          <h2 style={{ fontSize: '28px', fontWeight: 800, marginTop: '4px' }}>
+          <h2 className="stats-productivity-rate">
             {completionRate}%
           </h2>
-          <p style={{ fontSize: '12.5px', opacity: 0.9, marginTop: '2px', maxWidth: '190px', lineHeight: 1.3 }}>
+          <p className="stats-productivity-copy">
             {completionRate === 100
               ? '¡Excelente! Has completado todas tus tareas.'
               : completionRate >= 50
@@ -151,7 +129,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
         </div>
 
         {/* Gráfico circular estilizado */}
-        <div style={{ position: 'relative', width: '82px', height: '82px' }}>
+        <div className="stats-productivity-chart">
           <svg width="82" height="82" viewBox="0 0 36 36">
             <path
               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -166,19 +144,11 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
               strokeWidth="3.8"
               strokeDasharray={`${completionRate}, 100`}
               strokeLinecap="round"
-              style={{ transition: 'stroke-dasharray 0.6s ease' }}
+              className="stats-productivity-progress"
             />
           </svg>
           <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '13px',
-              fontWeight: 800,
-            }}
+            className="stats-productivity-count"
           >
             {completedTasks}/{totalTasks}
           </div>
@@ -186,81 +156,55 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
       </div>
 
       {/* Resumen en 4 Tarjetas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+      <div className="stats-summary-grid">
         <div
-          style={{
-            backgroundColor: 'var(--bg-surface-elevated)',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            padding: '14px',
-          }}
+          className="stats-summary-card"
         >
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>PENDIENTES</div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+          <div className="stats-summary-label">PENDIENTES</div>
+          <div className="stats-summary-value">
             {pendingTasks}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          <div className="stats-summary-caption">
             Por iniciar
           </div>
         </div>
 
         <div
-          style={{
-            backgroundColor: 'var(--bg-surface-elevated)',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            padding: '14px',
-          }}
+          className="stats-summary-card"
         >
-          <div style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 600 }}>EN PROGRESO</div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+          <div className="stats-summary-label is-progress">EN PROGRESO</div>
+          <div className="stats-summary-value">
             {inProgressTasks}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          <div className="stats-summary-caption">
             En desarrollo
           </div>
         </div>
 
         <div
-          style={{
-            backgroundColor: 'var(--bg-surface-elevated)',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            padding: '14px',
-          }}
+          className="stats-summary-card"
         >
-          <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>COMPLETADAS</div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#10b981', marginTop: '2px' }}>
+          <div className="stats-summary-label is-complete">COMPLETADAS</div>
+          <div className="stats-summary-value is-complete">
             {completedTasks}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          <div className="stats-summary-caption">
             Metas logradas
           </div>
         </div>
 
         <div
-          style={{
-            backgroundColor: 'var(--bg-surface-elevated)',
-            border: '1px solid',
-            borderColor: overdueTasks > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            padding: '14px',
-          }}
+          className={`stats-summary-card ${overdueTasks > 0 ? 'has-overdue' : ''}`}
         >
-          <div style={{ fontSize: '11px', color: overdueTasks > 0 ? '#ef4444' : 'var(--text-muted)', fontWeight: 600 }}>
+          <div className={`stats-summary-label ${overdueTasks > 0 ? 'is-overdue' : ''}`}>
             VENCIDAS
           </div>
           <div
-            style={{
-              fontSize: '20px',
-              fontWeight: 700,
-              color: overdueTasks > 0 ? '#ef4444' : 'var(--text-primary)',
-              marginTop: '2px',
-            }}
+            className={`stats-summary-value ${overdueTasks > 0 ? 'is-overdue' : ''}`}
           >
             {overdueTasks}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          <div className="stats-summary-caption">
             {overdueTasks > 0 ? 'Requieren atención' : '¡Todo al día!'}
           </div>
         </div>
@@ -268,43 +212,28 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
 
       {/* Métricas de Subtareas y Notas */}
       <div
-        style={{
-          backgroundColor: 'var(--bg-surface-elevated)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '16px',
-        }}
+        className="stats-section-card"
       >
-        <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>
+        <h3 className="stats-section-title">
           Desglose General
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="stats-vertical-list stats-general-list">
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Progreso de Subtareas</span>
-              <span style={{ fontWeight: 600 }}>
+            <div className="stats-progress-header">
+              <span className="stats-secondary-text">Progreso de Subtareas</span>
+              <span className="stats-emphasis-text">
                 {completedSubtasks} de {totalSubtasks}
               </span>
             </div>
-            <div style={{ height: '6px', backgroundColor: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div
-                style={{
-                  height: '100%',
-                  width: `${totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0}%`,
-                  backgroundColor: '#6366f1',
-                  borderRadius: '3px',
-                  transition: 'width 0.3s ease',
-                }}
-              />
-            </div>
+            <progress className="stats-progress-bar stats-subtask-progress" value={totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0} max={100} />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', paddingTop: '6px' }}>
-            <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="stats-notes-total">
+            <span className="stats-secondary-text stats-inline-icon">
               <TagIcon size={14} /> Total de Notas en Bloc
             </span>
-            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+            <span className="stats-emphasis-text">
               {notes.length} ({notes.filter((n) => n.isPinned).length} fijadas)
             </span>
           </div>
@@ -313,40 +242,26 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
 
       {/* Distribución por Categorías */}
       <div
-        style={{
-          backgroundColor: 'var(--bg-surface-elevated)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '16px',
-        }}
+        className="stats-section-card"
       >
-        <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>
+        <h3 className="stats-section-title">
           Tareas por Categoría
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="stats-vertical-list">
           {categories.map((cat) => {
             const count = categoryCounts[cat] || 0;
             const pct = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
             const conf = CATEGORY_CONFIG[cat];
             return (
-              <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '14px', width: '22px' }}>{conf.icon}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '2px' }}>
-                    <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{conf.label}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>{count} ({pct}%)</span>
+              <div key={cat} className="stats-breakdown-row">
+                <span className="stats-category-icon">{conf.icon}</span>
+                <div className="stats-breakdown-content">
+                  <div className="stats-progress-header stats-progress-header-tight">
+                    <span className="stats-primary-text">{conf.label}</span>
+                    <span className="stats-muted-text">{count} ({pct}%)</span>
                   </div>
-                  <div style={{ height: '5px', backgroundColor: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${pct}%`,
-                        backgroundColor: conf.color,
-                        borderRadius: '3px',
-                      }}
-                    />
-                  </div>
+                  <progress className={`stats-progress-bar category-progress category-${cat}`} value={pct} max={100} />
                 </div>
               </div>
             );
@@ -356,38 +271,24 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
 
       {/* Distribución por Prioridad */}
       <div
-        style={{
-          backgroundColor: 'var(--bg-surface-elevated)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '16px',
-        }}
+        className="stats-section-card"
       >
-        <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>
+        <h3 className="stats-section-title">
           Tareas por Prioridad
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="stats-vertical-list">
           {priorities.map((p) => {
             const count = priorityCounts[p] || 0;
             const pct = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
             const conf = PRIORITY_CONFIG[p];
             return (
               <div key={p}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '3px' }}>
-                  <span style={{ fontWeight: 600, color: conf.color }}>{conf.label}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{count} ({pct}%)</span>
+                <div className="stats-progress-header stats-progress-header-tight">
+                  <span className={`stats-priority-text priority-${p}`}>{conf.label}</span>
+                  <span className="stats-muted-text">{count} ({pct}%)</span>
                 </div>
-                <div style={{ height: '6px', backgroundColor: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${pct}%`,
-                      backgroundColor: conf.color,
-                      borderRadius: '3px',
-                    }}
-                  />
-                </div>
+                <progress className={`stats-progress-bar priority-progress priority-${p}`} value={pct} max={100} />
               </div>
             );
           })}
@@ -396,22 +297,17 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
 
       {/* Gestión de Datos y Respaldos */}
       <div
-        style={{
-          backgroundColor: 'var(--bg-surface-elevated)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '16px',
-        }}
+        className="stats-section-card"
       >
-        <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+        <h3 className="stats-section-title stats-data-title">
           Gestión de Datos
         </h3>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+        <p className="stats-data-description">
           Exporta tu información a un archivo JSON o importa una copia existente.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button type="button" className="btn btn-secondary" onClick={handleExport} style={{ width: '100%' }}>
+        <div className="stats-data-actions">
+          <button type="button" className="btn btn-secondary stats-full-width-btn" onClick={handleExport}>
             <ExportIcon size={16} />
             <span>Exportar Copia de Seguridad</span>
           </button>
@@ -420,23 +316,21 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
             type="file"
             ref={fileInputRef}
             accept=".json"
-            style={{ display: 'none' }}
+            className="stats-hidden-file-input"
             onChange={handleImportFile}
           />
           <button
             type="button"
-            className="btn btn-secondary"
             onClick={() => fileInputRef.current?.click()}
-            style={{ width: '100%' }}
+            className="btn btn-secondary stats-full-width-btn"
           >
             <span>Importar Copia (JSON)</span>
           </button>
 
           <button
             type="button"
-            className="btn btn-danger"
             onClick={handleResetDefaults}
-            style={{ width: '100%', marginTop: '4px' }}
+            className="btn btn-danger stats-full-width-btn stats-reset-btn"
           >
             <ResetIcon size={16} />
             <span>Restablecer Datos de Demostración</span>

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Note } from '../../types';
-import { NOTE_COLOR_CONFIG, formatRelativeTime } from '../../utils';
+import { formatRelativeTime } from '../../utils';
 import { EditIcon, PinIcon, TrashIcon } from '../../components/common/Icons';
 import { TagBadge } from '../../components/common/Badge';
+import './NoteCard.css';
 
 interface NoteCardProps {
   note: Note;
@@ -19,39 +20,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onTogglePin,
   onSelectTag,
 }) => {
-  const colorConf = NOTE_COLOR_CONFIG[note.color] || NOTE_COLOR_CONFIG.grafito;
-
   return (
     <div
-      style={{
-        backgroundColor: colorConf.bgLight,
-        borderColor: colorConf.borderLight,
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        borderRadius: 'var(--radius-lg)',
-        padding: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-        boxShadow: 'var(--shadow-sm)',
-        transition: 'all 0.2s ease',
-        position: 'relative',
-        color: '#1e293b',
-      }}
       className="note-card-dynamic"
       data-color={note.color}
     >
       {/* Cabecera de la Nota: Título y Botón Pin */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-        <h3
-          style={{
-            fontSize: '16px',
-            fontWeight: 700,
-            lineHeight: 1.3,
-            color: 'inherit',
-            wordBreak: 'break-word',
-          }}
-        >
+      <div className="note-card-header">
+        <h3 className="note-card-title">
           {note.title}
         </h3>
 
@@ -60,18 +36,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           onClick={() => onTogglePin(note.id)}
           title={note.isPinned ? 'Desfijar nota' : 'Fijar nota'}
           aria-label="Fijar nota"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: note.isPinned ? colorConf.accent : 'var(--text-muted)',
-            padding: '4px',
-            borderRadius: 'var(--radius-full)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'transform 0.2s ease',
-          }}
+          className={`note-pin-btn ${note.isPinned ? 'is-pinned' : ''}`}
         >
           <PinIcon size={18} filled={note.isPinned} />
         </button>
@@ -79,26 +44,19 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
       {/* Contenido de la Nota */}
       <p
-        style={{
-          fontSize: '13.5px',
-          lineHeight: 1.5,
-          color: 'inherit',
-          opacity: 0.9,
-          whiteSpace: 'pre-line',
-          wordBreak: 'break-word',
-        }}
+        className="note-card-content"
       >
         {note.content}
       </p>
 
       {/* Etiquetas / Tags */}
       {note.tags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '2px' }}>
+        <div className="note-card-tags">
           {note.tags.map((tag) => (
             <span
               key={tag}
               onClick={() => onSelectTag?.(tag)}
-              style={{ cursor: onSelectTag ? 'pointer' : 'default' }}
+              className={onSelectTag ? 'is-clickable' : ''}
             >
               <TagBadge label={tag} />
             </span>
@@ -108,29 +66,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
       {/* Pie de Tarjeta: Timestamp y Acciones */}
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: 'auto',
-          paddingTop: '8px',
-          borderTop: '1px solid rgba(0, 0, 0, 0.08)',
-          fontSize: '11px',
-          opacity: 0.8,
-        }}
+        className="note-card-footer"
       >
         <span>{formatRelativeTime(note.updatedAt)}</span>
 
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div className="note-card-actions">
           <button
             type="button"
-            className="icon-btn"
-            style={{
-              width: '28px',
-              height: '28px',
-              backgroundColor: 'rgba(255, 255, 255, 0.6)',
-              borderColor: 'rgba(0, 0, 0, 0.1)',
-            }}
+            className="icon-btn note-action-btn"
             onClick={() => onEdit(note)}
             title="Editar nota"
             aria-label="Editar"
@@ -139,14 +82,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </button>
           <button
             type="button"
-            className="icon-btn"
-            style={{
-              width: '28px',
-              height: '28px',
-              backgroundColor: 'rgba(255, 255, 255, 0.6)',
-              borderColor: 'rgba(0, 0, 0, 0.1)',
-              color: '#ef4444',
-            }}
+            className="icon-btn note-action-btn delete-btn"
             onClick={() => onDelete(note.id)}
             title="Eliminar nota"
             aria-label="Eliminar"

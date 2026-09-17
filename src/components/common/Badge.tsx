@@ -12,13 +12,10 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
   return (
     <span
       className="badge"
-      style={{
-        backgroundColor: config.bg,
-        color: config.color,
-        border: `1px solid ${config.color}33`,
-      }}
+      data-variant="priority"
+      data-value={priority}
     >
-      <span className="badge-dot" style={{ backgroundColor: config.color }} />
+      <span className="badge-dot" />
       {config.label}
     </span>
   );
@@ -33,11 +30,8 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category }) => {
   return (
     <span
       className="badge"
-      style={{
-        backgroundColor: `${config.color}15`,
-        color: config.color,
-        border: `1px solid ${config.color}25`,
-      }}
+      data-variant="category"
+      data-value={category}
     >
       <span>{config.icon}</span>
       {config.label}
@@ -54,10 +48,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   return (
     <span
       className="badge"
-      style={{
-        backgroundColor: `${config.color}18`,
-        color: config.color,
-      }}
+      data-variant="status"
+      data-value={status}
     >
       {config.label}
     </span>

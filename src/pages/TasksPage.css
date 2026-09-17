@@ -1,0 +1,11 @@
+.tasks-page { display: flex; flex-direction: column; height: 100%; }
+.tasks-page-banner { background: var(--primary-gradient); border-radius: var(--radius-lg); padding: 16px 18px; color: #fff; margin-bottom: 16px; box-shadow: var(--shadow-glow); display: flex; align-items: center; justify-content: space-between; }
+.tasks-banner-kicker { display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: .9; }
+.tasks-banner-title { font-size: 17px; font-weight: 700; margin-top: 2px; }
+.tasks-banner-subtitle { font-size: 12px; opacity: .85; margin-top: 2px; }
+.tasks-banner-action { background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.35); color: #fff; padding: 8px 12px; border-radius: var(--radius-full); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(10px); }
+.tasks-list { flex: 1; }
+.tasks-empty-state { padding: 40px 20px; text-align: center; background: var(--bg-surface-elevated); border-radius: var(--radius-lg); border: 1px dashed var(--border-color); margin-top: 10px; }
+.tasks-empty-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+.tasks-empty-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.tasks-empty-description { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }

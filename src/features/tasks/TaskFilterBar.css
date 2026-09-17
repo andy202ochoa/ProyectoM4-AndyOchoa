@@ -99,3 +99,7 @@
   height: 6px;
   border-radius: 50%;
 }
+
+.task-filter-priority-dot.priority-alta { background-color: #ef4444; }
+.task-filter-priority-dot.priority-media { background-color: #f59e0b; }
+.task-filter-priority-dot.priority-baja { background-color: #10b981; }

@@ -151,13 +151,20 @@
 }
 
 .task-subtasks-progress-fill {
-  height: 100%;
-  background-color: var(--primary);
-  transition: width 0.3s ease;
+  width: 100%;
+  height: 6px;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bg-input);
 }
 
-.task-subtasks-progress-fill.is-all-done {
-  background-color: #10b981;
+.task-subtasks-progress-fill::-webkit-progress-bar { background: var(--bg-input); }
+.task-subtasks-progress-fill::-webkit-progress-value { background: var(--primary); border-radius: 999px; transition: width 0.3s ease; }
+.task-subtasks-progress-fill::-moz-progress-bar { background: var(--primary); border-radius: 999px; transition: width 0.3s ease; }
+.task-subtasks-progress-fill[value='100']::-webkit-progress-value,
+.task-subtasks-progress-fill[value='100']::-moz-progress-bar { background: #10b981; }
 }
 
 .task-subtasks-list {

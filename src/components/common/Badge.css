@@ -16,6 +16,20 @@
   border-radius: 50%;
 }
 
+.badge[data-variant='priority'][data-value='alta'] { background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+.badge[data-variant='priority'][data-value='media'] { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+.badge[data-variant='priority'][data-value='baja'] { background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+.badge[data-variant='priority'] .badge-dot { background: currentColor; }
+.badge[data-variant='category'][data-value='trabajo'] { background: rgba(99, 102, 241, 0.08); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.15); }
+.badge[data-variant='category'][data-value='personal'] { background: rgba(236, 72, 153, 0.08); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.15); }
+.badge[data-variant='category'][data-value='estudio'] { background: rgba(139, 92, 246, 0.08); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.15); }
+.badge[data-variant='category'][data-value='ideas'] { background: rgba(6, 182, 212, 0.08); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.15); }
+.badge[data-variant='category'][data-value='compras'] { background: rgba(16, 185, 129, 0.08); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.15); }
+.badge[data-variant='category'][data-value='salud'] { background: rgba(244, 63, 94, 0.08); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.15); }
+.badge[data-variant='status'][data-value='pendiente'] { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
+.badge[data-variant='status'][data-value='en_progreso'] { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.badge[data-variant='status'][data-value='completada'] { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
 .badge-tag {
   background-color: var(--bg-input);
   color: var(--text-secondary);

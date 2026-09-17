@@ -5,6 +5,7 @@ import { useNotes } from '../hooks/useNotes';
 import { TasksPage } from '../pages/TasksPage';
 import { NotesPage } from '../pages/NotesPage';
 import { StatsPage } from '../pages/StatsPage';
+import './AppRouter.css';
 
 interface AppRouterProps {
   currentTab: NavTab;
@@ -18,7 +19,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({
   noteHook,
 }) => {
   return (
-    <div style={{ height: '100%' }}>
+    <div className="app-router-content">
       {currentTab === 'tasks' && <TasksPage taskHook={taskHook} />}
       {currentTab === 'notes' && <NotesPage noteHook={noteHook} />}
       {currentTab === 'stats' && <StatsPage taskHook={taskHook} noteHook={noteHook} />}

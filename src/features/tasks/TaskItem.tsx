@@ -113,10 +113,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
           {/* Barra de progreso */}
           <div className="task-subtasks-progress-track">
-            <div
-              className={`task-subtasks-progress-fill ${subPercent === 100 ? 'is-all-done' : ''}`}
-              style={{ width: `${subPercent}%` }}
-            />
+            <progress className="task-subtasks-progress-fill" value={subPercent} max={100} />
           </div>
 
           {/* Lista desplegable de subtareas */}
