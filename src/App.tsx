@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useTheme } from './hooks/useTheme';
 import { useTasks } from './hooks/useTasks';
 import { useNotes } from './hooks/useNotes';
-import { Header, BottomNav, NavTab } from './components/common';
-import { TasksPage } from './pages/TasksPage';
-import { NotesPage } from './pages/NotesPage';
+import { Header, BottomNav, NavTab, QuickAddFAB } from './components/common';
+import { AppRouter } from './routes/AppRouter';
+import { TaskModal } from './features/tasks';
+import { NoteModal } from './features/notes';
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
@@ -12,9 +13,15 @@ export default function App() {
   const noteHook = useNotes();
   const [currentTab, setCurrentTab] = useState<NavTab>('tasks');
 
-  // Conectar el buscador dinámicamente según la pestaña activa
+  // Modales globales para creación rápida vía FAB
+  const [isQuickTaskModalOpen, setIsQuickTaskModalOpen] = useState(false);
+  const [isQuickNoteModalOpen, setIsQuickNoteModalOpen] = useState(false);
+
+  // Sincronización del buscador según la pestaña activa
   const isNotesTab = currentTab === 'notes';
+  const isTasksTab = currentTab === 'tasks';
   const currentSearchQuery = isNotesTab ? noteHook.searchQuery : taskHook.searchQuery;
+
   const handleSearchChange = (query: string) => {
     if (isNotesTab) {
       noteHook.setSearchQuery(query);
@@ -26,40 +33,44 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="mobile-frame">
-        {/* Barra ficticia estilo smartphone para Desktop */}
+        {/* Barra de estado ficticia para entorno Desktop */}
         <div className="mobile-notch-bar">
           <span>9:41</span>
           <span>TaskFlow Mobile</span>
           <span>100% 🔋</span>
         </div>
 
-        {/* Encabezado */}
+        {/* Encabezado adaptable */}
         <Header
           theme={theme}
           onToggleTheme={toggleTheme}
-          title={isNotesTab ? 'Mis Notas' : currentTab === 'stats' ? 'Progreso' : 'TaskFlow'}
+          title={isTasksTab ? 'TaskFlow' : isNotesTab ? 'Mis Notas' : 'Estadísticas'}
           subtitle={
-            isNotesTab
-              ? 'Ideas, apuntes y notas rápidas'
-              : currentTab === 'stats'
-              ? 'Métricas de productividad'
-              : 'Tus tareas organizadas'
+            isTasksTab
+              ? 'Tus tareas y actividades'
+              : isNotesTab
+              ? 'Ideas, apuntes y recordatorios'
+              : 'Productividad y gestión'
           }
           searchQuery={currentSearchQuery}
           onSearchChange={handleSearchChange}
           showSearch={currentTab !== 'stats'}
         />
 
-        {/* Contenido Principal */}
+        {/* Vistas enrutadas */}
         <main className="main-content">
-          {currentTab === 'tasks' && <TasksPage taskHook={taskHook} />}
-          {currentTab === 'notes' && <NotesPage noteHook={noteHook} />}
-          {currentTab === 'stats' && (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)' }}>
-              <p>Módulo de Métricas en preparación (Fase 6)</p>
-            </div>
-          )}
+          <AppRouter
+            currentTab={currentTab}
+            taskHook={taskHook}
+            noteHook={noteHook}
+          />
         </main>
+
+        {/* Botón de Acción Flotante (+ FAB) */}
+        <QuickAddFAB
+          onNewTask={() => setIsQuickTaskModalOpen(true)}
+          onNewNote={() => setIsQuickNoteModalOpen(true)}
+        />
 
         {/* Barra de Navegación Inferior */}
         <BottomNav
@@ -67,6 +78,25 @@ export default function App() {
           onSelectTab={setCurrentTab}
           pendingTasksCount={taskHook.counts.activas}
           totalNotesCount={noteHook.totalNotesCount}
+        />
+
+        {/* Modales globales de creación rápida */}
+        <TaskModal
+          isOpen={isQuickTaskModalOpen}
+          onClose={() => setIsQuickTaskModalOpen(false)}
+          onSave={(data) => {
+            taskHook.addTask(data);
+            setCurrentTab('tasks');
+          }}
+        />
+
+        <NoteModal
+          isOpen={isQuickNoteModalOpen}
+          onClose={() => setIsQuickNoteModalOpen(false)}
+          onSave={(data) => {
+            noteHook.addNote(data);
+            setCurrentTab('notes');
+          }}
         />
       </div>
     </div>
