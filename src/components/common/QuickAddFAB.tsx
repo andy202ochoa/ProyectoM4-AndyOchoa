@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { NotesIcon, PlusIcon, TasksIcon } from './Icons';
+import './QuickAddFAB.css';
 
 interface QuickAddFABProps {
   onNewTask: () => void;
@@ -39,18 +40,7 @@ export const QuickAddFAB: React.FC<QuickAddFABProps> = ({ onNewTask, onNewNote }
             }}
           >
             <span>Nueva Nota</span>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                backgroundColor: 'rgba(236, 72, 153, 0.15)',
-                color: '#ec4899',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+            <div className="fab-icon-bubble notes">
               <NotesIcon size={16} />
             </div>
           </button>
@@ -64,18 +54,7 @@ export const QuickAddFAB: React.FC<QuickAddFABProps> = ({ onNewTask, onNewNote }
             }}
           >
             <span>Nueva Tarea</span>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                color: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+            <div className="fab-icon-bubble tasks">
               <TasksIcon size={16} />
             </div>
           </button>
@@ -84,13 +63,10 @@ export const QuickAddFAB: React.FC<QuickAddFABProps> = ({ onNewTask, onNewNote }
 
       <button
         type="button"
-        className="fab-main"
+        className={`fab-main ${isOpen ? 'is-open' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         title="Creación rápida"
         aria-label="Añadir nueva tarea o nota"
-        style={{
-          transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
-        }}
       >
         <PlusIcon size={24} />
       </button>

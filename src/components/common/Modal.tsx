@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { CloseIcon } from './Icons';
+import './Modal.css';
 
 interface ModalProps {
   isOpen: boolean;
@@ -49,8 +50,7 @@ export const Modal: React.FC<ModalProps> = ({
           <h2 className="modal-title">{title}</h2>
           <button
             type="button"
-            className="icon-btn"
-            style={{ width: 32, height: 32 }}
+            className="icon-btn modal-close-btn"
             onClick={onClose}
             aria-label="Cerrar modal"
           >

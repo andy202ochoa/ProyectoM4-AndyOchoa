@@ -3,6 +3,7 @@ import { Task } from '../../types';
 import { formatDueDate, isDueToday, isOverdue } from '../../utils';
 import { CalendarIcon, CheckIcon, CircleIcon, EditIcon, TrashIcon } from '../../components/common/Icons';
 import { CategoryBadge, PriorityBadge } from '../../components/common/Badge';
+import './TaskItem.css';
 
 interface TaskItemProps {
   task: Task;
@@ -30,108 +31,39 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   const subPercent = totalSubs > 0 ? Math.round((completedSubs / totalSubs) * 100) : 0;
 
   return (
-    <div
-      style={{
-        backgroundColor: isDone ? 'var(--bg-app)' : 'var(--bg-surface-elevated)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '14px 16px',
-        marginBottom: '10px',
-        boxShadow: isDone ? 'none' : 'var(--shadow-sm)',
-        opacity: isDone ? 0.75 : 1,
-        transition: 'all 0.25s ease',
-        position: 'relative',
-      }}
-    >
+    <div className={`task-item-card ${isDone ? 'is-done' : ''}`}>
       {/* Fila Principal: Checkbox + Título + Acciones */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+      <div className="task-item-main-row">
         {/* Botón Checkbox Interactivo */}
         <button
           type="button"
           onClick={() => onToggleStatus(task.id)}
           aria-label={isDone ? 'Marcar como pendiente' : 'Marcar como completada'}
-          style={{
-            background: isDone ? '#10b981' : 'transparent',
-            border: isDone ? 'none' : '2px solid var(--text-muted)',
-            borderRadius: '50%',
-            width: '26px',
-            height: '26px',
-            minWidth: '26px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            marginTop: '2px',
-            color: '#ffffff',
-            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            boxShadow: isDone ? '0 0 10px rgba(16, 185, 129, 0.4)' : 'none',
-          }}
+          className={`task-checkbox-btn ${isDone ? 'is-checked' : ''}`}
         >
           {isDone ? <CheckIcon size={16} /> : null}
         </button>
 
         {/* Contenido Central */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h3
-            style={{
-              fontSize: '15px',
-              fontWeight: 600,
-              color: isDone ? 'var(--text-muted)' : 'var(--text-primary)',
-              textDecoration: isDone ? 'line-through' : 'none',
-              marginBottom: '4px',
-              wordBreak: 'break-word',
-              lineHeight: 1.35,
-            }}
-          >
+        <div className="task-content-block">
+          <h3 className={`task-title ${isDone ? 'is-struck' : ''}`}>
             {task.title}
           </h3>
 
           {task.description && (
-            <p
-              style={{
-                fontSize: '13px',
-                color: 'var(--text-secondary)',
-                marginBottom: '8px',
-                lineHeight: 1.4,
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}
-            >
+            <p className="task-desc">
               {task.description}
             </p>
           )}
 
           {/* Fila de Badges y Metadatos */}
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              gap: '6px',
-              marginTop: '6px',
-            }}
-          >
+          <div className="task-badges-row">
             <CategoryBadge category={task.category} />
             <PriorityBadge priority={task.priority} />
 
             {task.dueDate && (
               <span
-                className="badge"
-                style={{
-                  backgroundColor: overdue
-                    ? 'rgba(239, 68, 68, 0.12)'
-                    : dueToday
-                      ? 'rgba(245, 158, 11, 0.12)'
-                      : 'var(--bg-input)',
-                  color: overdue ? '#ef4444' : dueToday ? '#f59e0b' : 'var(--text-secondary)',
-                  border: overdue
-                    ? '1px solid rgba(239, 68, 68, 0.3)'
-                    : dueToday
-                      ? '1px solid rgba(245, 158, 11, 0.3)'
-                      : '1px solid var(--border-color)',
-                }}
+                className={`badge task-due-badge ${overdue ? 'is-overdue' : ''} ${dueToday ? 'is-today' : ''}`}
               >
                 <CalendarIcon size={12} />
                 {formatDueDate(task.dueDate)}
@@ -141,11 +73,10 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         </div>
 
         {/* Botones de Acción (Editar / Borrar) */}
-        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+        <div className="task-actions-col">
           <button
             type="button"
-            className="icon-btn"
-            style={{ width: '30px', height: '30px', padding: 0 }}
+            className="icon-btn task-action-icon-btn"
             onClick={() => onEdit(task)}
             title="Editar tarea"
             aria-label="Editar"
@@ -154,8 +85,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
           </button>
           <button
             type="button"
-            className="icon-btn"
-            style={{ width: '30px', height: '30px', padding: 0, color: '#ef4444' }}
+            className="icon-btn task-action-icon-btn delete-btn"
             onClick={() => onDelete(task.id)}
             title="Eliminar tarea"
             aria-label="Eliminar"
@@ -167,81 +97,41 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
       {/* Sección de Subtareas con barra de progreso */}
       {totalSubs > 0 && (
-        <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+        <div className="task-subtasks-container">
           <button
             type="button"
             onClick={() => setShowSubtasks(!showSubtasks)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              color: 'var(--text-secondary)',
-              fontSize: '12px',
-              fontWeight: 600,
-            }}
+            className="task-subtasks-toggle-btn"
           >
             <span>
               Subtareas: {completedSubs}/{totalSubs} ({subPercent}%)
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--primary)' }}>
+            <span className="task-subtasks-toggle-chevron">
               {showSubtasks ? 'Ocultar ▲' : 'Ver lista ▼'}
             </span>
           </button>
 
           {/* Barra de progreso */}
-          <div
-            style={{
-              height: '4px',
-              width: '100%',
-              backgroundColor: 'var(--bg-input)',
-              borderRadius: '2px',
-              marginTop: '6px',
-              overflow: 'hidden',
-            }}
-          >
+          <div className="task-subtasks-progress-track">
             <div
-              style={{
-                height: '100%',
-                width: `${subPercent}%`,
-                backgroundColor: subPercent === 100 ? '#10b981' : 'var(--primary)',
-                transition: 'width 0.3s ease',
-              }}
+              className={`task-subtasks-progress-fill ${subPercent === 100 ? 'is-all-done' : ''}`}
+              style={{ width: `${subPercent}%` }}
             />
           </div>
 
           {/* Lista desplegable de subtareas */}
           {showSubtasks && (
-            <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div className="task-subtasks-list">
               {task.subtasks.map((st) => (
                 <div
                   key={st.id}
                   onClick={() => onToggleSubTask(task.id, st.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '6px 8px',
-                    borderRadius: 'var(--radius-sm)',
-                    backgroundColor: 'var(--bg-input)',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                  }}
+                  className="task-subtask-item"
                 >
-                  <span style={{ color: st.completed ? '#10b981' : 'var(--text-muted)', display: 'flex' }}>
+                  <span className={`task-subtask-icon ${st.completed ? 'is-completed' : ''}`}>
                     {st.completed ? <CheckIcon size={14} /> : <CircleIcon size={14} />}
                   </span>
-                  <span
-                    style={{
-                      fontSize: '13px',
-                      color: st.completed ? 'var(--text-muted)' : 'var(--text-primary)',
-                      textDecoration: st.completed ? 'line-through' : 'none',
-                    }}
-                  >
+                  <span className={`task-subtask-title ${st.completed ? 'is-completed' : ''}`}>
                     {st.title}
                   </span>
                 </div>

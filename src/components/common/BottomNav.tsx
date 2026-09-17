@@ -1,5 +1,6 @@
 import React from 'react';
 import { NotesIcon, StatsIcon, TasksIcon } from './Icons';
+import './BottomNav.css';
 
 export type NavTab = 'tasks' | 'notes' | 'stats';
 
@@ -40,10 +41,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         <div className="nav-icon-wrap">
           <NotesIcon size={20} />
           {totalNotesCount > 0 && (
-            <span
-              className="nav-badge-pill"
-              style={{ backgroundColor: 'var(--primary)', boxShadow: '0 0 6px var(--primary)' }}
-            >
+            <span className="nav-badge-pill notes-pill">
               {totalNotesCount}
             </span>
           )}

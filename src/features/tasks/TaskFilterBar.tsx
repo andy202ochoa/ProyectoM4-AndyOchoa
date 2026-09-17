@@ -1,4 +1,6 @@
+import React from 'react';
 import { PriorityFilter, TaskFilter } from '../../types';
+import './TaskFilterBar.css';
 
 interface TaskFilterBarProps {
   currentStatus: TaskFilter;
@@ -35,18 +37,9 @@ export const TaskFilterBar: React.FC<TaskFilterBarProps> = ({
   ];
 
   return (
-    <div style={{ marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="task-filter-container">
       {/* Pestañas de Estado */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '6px',
-          overflowX: 'auto',
-          paddingBottom: '2px',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}
-      >
+      <div className="task-filter-status-row">
         {statusTabs.map((tab) => {
           const isActive = currentStatus === tab.id;
           return (
@@ -54,33 +47,10 @@ export const TaskFilterBar: React.FC<TaskFilterBarProps> = ({
               key={tab.id}
               type="button"
               onClick={() => onSelectStatus(tab.id)}
-              style={{
-                flex: '0 0 auto',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-full)',
-                border: '1px solid',
-                borderColor: isActive ? 'var(--primary)' : 'var(--border-color)',
-                backgroundColor: isActive ? 'var(--primary)' : 'var(--bg-surface-elevated)',
-                color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s ease',
-              }}
+              className={`task-filter-status-pill ${isActive ? 'is-active' : ''}`}
             >
               <span>{tab.label}</span>
-              <span
-                style={{
-                  fontSize: '11px',
-                  opacity: isActive ? 0.9 : 0.6,
-                  padding: '1px 5px',
-                  borderRadius: '10px',
-                  backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : 'var(--bg-input)',
-                }}
-              >
+              <span className="task-filter-count-badge">
                 {tab.count}
               </span>
             </button>
@@ -89,16 +59,8 @@ export const TaskFilterBar: React.FC<TaskFilterBarProps> = ({
       </div>
 
       {/* Selector de Prioridad Rápido */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-        }}
-      >
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
+      <div className="task-filter-priority-row">
+        <span className="task-filter-priority-label">
           Prioridad:
         </span>
         {priorities.map((p) => {
@@ -108,22 +70,10 @@ export const TaskFilterBar: React.FC<TaskFilterBarProps> = ({
               key={p.id}
               type="button"
               onClick={() => onSelectPriority(p.id)}
-              style={{
-                padding: '3px 8px',
-                borderRadius: 'var(--radius-sm)',
-                border: isSelected ? '1px solid var(--border-focus)' : '1px solid transparent',
-                backgroundColor: isSelected ? 'var(--primary-light)' : 'transparent',
-                color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
-                fontSize: '12px',
-                fontWeight: isSelected ? 700 : 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
+              className={`task-filter-priority-btn ${isSelected ? 'is-selected' : ''}`}
             >
               {p.color && (
-                <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: p.color }} />
+                <span className="task-filter-priority-dot" style={{ backgroundColor: p.color }} />
               )}
               {p.label}
             </button>

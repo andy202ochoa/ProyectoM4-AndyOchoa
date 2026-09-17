@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MoonIcon, SearchIcon, SunIcon, TasksIcon } from './Icons';
 import { Theme } from '../../hooks/useTheme';
+import './Header.css';
 
 interface HeaderProps {
   theme: Theme;
@@ -21,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   showSearch = true,
 }) => {
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <header className="app-header">
@@ -60,28 +61,11 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {isSearchOpen && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            padding: '10px 16px',
-            backgroundColor: 'var(--bg-surface)',
-            borderBottom: '1px solid var(--border-color)',
-            boxShadow: 'var(--shadow-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            zIndex: 35,
-            animation: 'fadeIn 0.2s ease',
-          }}
-        >
-          <SearchIcon size={16} style={{ color: 'var(--text-muted)' }} />
+        <div className="header-search-overlay">
+          <SearchIcon size={16} className="header-search-icon" />
           <input
             type="text"
-            className="form-input"
-            style={{ padding: '8px 12px' }}
+            className="form-input header-search-input"
             placeholder="Buscar por título, contenido o etiqueta..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -90,8 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
           {searchQuery && (
             <button
               type="button"
-              className="icon-btn"
-              style={{ width: 30, height: 30 }}
+              className="icon-btn header-search-clear"
               onClick={() => onSearchChange('')}
             >
               ×

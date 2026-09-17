@@ -1,6 +1,7 @@
 import React from 'react';
 import { TaskCategory, TaskPriority, TaskStatus } from '../../types';
 import { CATEGORY_CONFIG, PRIORITY_CONFIG, STATUS_CONFIG } from '../../utils';
+import './Badge.css';
 
 interface PriorityBadgeProps {
   priority: TaskPriority;
@@ -17,7 +18,7 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
         border: `1px solid ${config.color}33`,
       }}
     >
-      <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: config.color }} />
+      <span className="badge-dot" style={{ backgroundColor: config.color }} />
       {config.label}
     </span>
   );
@@ -70,28 +71,14 @@ interface TagBadgeProps {
 
 export const TagBadge: React.FC<TagBadgeProps> = ({ label, onRemove }) => {
   return (
-    <span
-      className="badge"
-      style={{
-        backgroundColor: 'var(--bg-input)',
-        color: 'var(--text-secondary)',
-        border: '1px solid var(--border-color)',
-      }}
-    >
+    <span className="badge badge-tag">
       #{label}
       {onRemove && (
         <button
           type="button"
           onClick={onRemove}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'inherit',
-            cursor: 'pointer',
-            padding: '0 2px',
-            marginLeft: '4px',
-            fontSize: '12px',
-          }}
+          className="badge-tag-remove"
+          aria-label={`Eliminar etiqueta ${label}`}
         >
           ×
         </button>
