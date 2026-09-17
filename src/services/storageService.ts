@@ -193,7 +193,7 @@ export const StorageService = {
   getTheme(): 'dark' | 'light' {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === 'dark' || stored === 'light') return stored;
-    
+
     // Si no está guardado, detectar preferencia del sistema
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';

@@ -16,7 +16,7 @@ export function getTodayDateString(): string {
  */
 export function isOverdue(dueDate?: string, status?: TaskStatus): boolean {
   if (!dueDate || status === 'completada') return false;
-  
+
   const today = getTodayDateString();
   return dueDate < today;
 }

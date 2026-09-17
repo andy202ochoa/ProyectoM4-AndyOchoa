@@ -66,14 +66,17 @@
 }
 
 /* Resets y Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   min-height: 100%;
   font-family: var(--font-main);
@@ -110,9 +113,10 @@ html, body {
   .app-shell {
     padding: 20px 0;
     background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 40%),
-                radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 40%),
-                var(--bg-app);
+      radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 40%),
+      var(--bg-app);
   }
+
   .mobile-frame {
     border-radius: 36px;
     border: 1px solid var(--border-color);
@@ -126,6 +130,7 @@ html, body {
 .mobile-notch-bar {
   display: none;
 }
+
 @media (min-width: 540px) {
   .mobile-notch-bar {
     display: flex;
@@ -454,7 +459,9 @@ html, body {
   letter-spacing: 0.04em;
 }
 
-.form-input, .form-textarea, .form-select {
+.form-input,
+.form-textarea,
+.form-select {
   width: 100%;
   padding: 10px 14px;
   border-radius: var(--radius-md);
@@ -467,7 +474,9 @@ html, body {
   transition: all 0.2s ease;
 }
 
-.form-input:focus, .form-textarea:focus, .form-select:focus {
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
@@ -539,13 +548,23 @@ html, body {
 
 /* Animaciones */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUpFade {
@@ -553,6 +572,7 @@ html, body {
     opacity: 0;
     transform: translateY(12px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -565,34 +585,39 @@ html, body {
   border-color: rgba(16, 185, 129, 0.35) !important;
   color: #a7f3d0 !important;
 }
+
 [data-theme='dark'] .note-card-dynamic[data-color='lavanda'] {
   background-color: rgba(139, 92, 246, 0.14) !important;
   border-color: rgba(139, 92, 246, 0.35) !important;
   color: #ddd6fe !important;
 }
+
 [data-theme='dark'] .note-card-dynamic[data-color='coral'] {
   background-color: rgba(244, 63, 94, 0.14) !important;
   border-color: rgba(244, 63, 94, 0.35) !important;
   color: #fecdd3 !important;
 }
+
 [data-theme='dark'] .note-card-dynamic[data-color='cielo'] {
   background-color: rgba(14, 165, 233, 0.14) !important;
   border-color: rgba(14, 165, 233, 0.35) !important;
   color: #bae6fd !important;
 }
+
 [data-theme='dark'] .note-card-dynamic[data-color='ambar'] {
   background-color: rgba(245, 158, 11, 0.14) !important;
   border-color: rgba(245, 158, 11, 0.35) !important;
   color: #fde68a !important;
 }
+
 [data-theme='dark'] .note-card-dynamic[data-color='grafito'] {
   background-color: #1a2234 !important;
   border-color: #334155 !important;
   color: #f1f5f9 !important;
 }
+
 [data-theme='dark'] .note-card-dynamic .icon-btn {
   background-color: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
   color: inherit !important;
 }
-

@@ -145,8 +145,8 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
             {completionRate === 100
               ? '¡Excelente! Has completado todas tus tareas.'
               : completionRate >= 50
-              ? '¡Gran avance! Vas por más de la mitad del camino.'
-              : 'Buen comienzo, ¡sigue tachando pendientes!'}
+                ? '¡Gran avance! Vas por más de la mitad del camino.'
+                : 'Buen comienzo, ¡sigue tachando pendientes!'}
           </p>
         </div>
 

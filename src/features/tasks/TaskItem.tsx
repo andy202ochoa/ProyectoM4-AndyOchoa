@@ -123,14 +123,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                   backgroundColor: overdue
                     ? 'rgba(239, 68, 68, 0.12)'
                     : dueToday
-                    ? 'rgba(245, 158, 11, 0.12)'
-                    : 'var(--bg-input)',
+                      ? 'rgba(245, 158, 11, 0.12)'
+                      : 'var(--bg-input)',
                   color: overdue ? '#ef4444' : dueToday ? '#f59e0b' : 'var(--text-secondary)',
                   border: overdue
                     ? '1px solid rgba(239, 68, 68, 0.3)'
                     : dueToday
-                    ? '1px solid rgba(245, 158, 11, 0.3)'
-                    : '1px solid var(--border-color)',
+                      ? '1px solid rgba(245, 158, 11, 0.3)'
+                      : '1px solid var(--border-color)',
                 }}
               >
                 <CalendarIcon size={12} />

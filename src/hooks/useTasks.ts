@@ -64,10 +64,10 @@ export function useTasks() {
           if (t.id !== id) return t;
           const updatedSubtasks: SubTask[] = updates.subtasks
             ? updates.subtasks.map((st) => ({
-                id: st.id || generateId(),
-                title: st.title.trim(),
-                completed: st.completed || false,
-              }))
+              id: st.id || generateId(),
+              title: st.title.trim(),
+              completed: st.completed || false,
+            }))
             : t.subtasks;
 
           return {
@@ -145,11 +145,11 @@ export function useTasks() {
       prev.map((t) =>
         t.id === taskId
           ? {
-              ...t,
-              subtasks: [...t.subtasks, newSub],
-              status: t.status === 'completada' ? 'en_progreso' : t.status,
-              updatedAt: new Date().toISOString(),
-            }
+            ...t,
+            subtasks: [...t.subtasks, newSub],
+            status: t.status === 'completada' ? 'en_progreso' : t.status,
+            updatedAt: new Date().toISOString(),
+          }
           : t
       )
     );
@@ -161,10 +161,10 @@ export function useTasks() {
       prev.map((t) =>
         t.id === taskId
           ? {
-              ...t,
-              subtasks: t.subtasks.filter((st) => st.id !== subTaskId),
-              updatedAt: new Date().toISOString(),
-            }
+            ...t,
+            subtasks: t.subtasks.filter((st) => st.id !== subTaskId),
+            updatedAt: new Date().toISOString(),
+          }
           : t
       )
     );

@@ -2,12 +2,12 @@ export type TaskPriority = 'baja' | 'media' | 'alta';
 
 export type TaskStatus = 'pendiente' | 'en_progreso' | 'completada';
 
-export type TaskCategory = 
-  | 'trabajo' 
-  | 'personal' 
-  | 'estudio' 
-  | 'ideas' 
-  | 'compras' 
+export type TaskCategory =
+  | 'trabajo'
+  | 'personal'
+  | 'estudio'
+  | 'ideas'
+  | 'compras'
   | 'salud';
 
 export interface SubTask {

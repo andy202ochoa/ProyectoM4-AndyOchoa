@@ -43,10 +43,10 @@ export function useNotes() {
       prev.map((n) =>
         n.id === id
           ? {
-              ...n,
-              ...updates,
-              updatedAt: new Date().toISOString(),
-            }
+            ...n,
+            ...updates,
+            updatedAt: new Date().toISOString(),
+          }
           : n
       )
     );
@@ -63,10 +63,10 @@ export function useNotes() {
       prev.map((n) =>
         n.id === id
           ? {
-              ...n,
-              isPinned: !n.isPinned,
-              updatedAt: new Date().toISOString(),
-            }
+            ...n,
+            isPinned: !n.isPinned,
+            updatedAt: new Date().toISOString(),
+          }
           : n
       )
     );

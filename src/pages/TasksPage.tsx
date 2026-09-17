@@ -152,8 +152,8 @@ export const TasksPage: React.FC<TasksPageProps> = ({ taskHook }) => {
               {searchQuery
                 ? 'No hay tareas que coincidan con la búsqueda'
                 : statusFilter === 'completada'
-                ? 'Aún no has completado tareas en esta vista'
-                : 'No tienes tareas pendientes'}
+                  ? 'Aún no has completado tareas en esta vista'
+                  : 'No tienes tareas pendientes'}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               {searchQuery

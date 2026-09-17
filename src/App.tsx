@@ -49,8 +49,8 @@ export default function App() {
             isTasksTab
               ? 'Tus tareas y actividades'
               : isNotesTab
-              ? 'Ideas, apuntes y recordatorios'
-              : 'Productividad y gestión'
+                ? 'Ideas, apuntes y recordatorios'
+                : 'Productividad y gestión'
           }
           searchQuery={currentSearchQuery}
           onSearchChange={handleSearchChange}
