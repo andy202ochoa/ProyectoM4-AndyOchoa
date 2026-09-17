@@ -46,19 +46,41 @@ export function useTasks() {
   }, []);
 
   // Actualizar una tarea existente
-  const updateTask = useCallback((id: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>) => {
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              ...updates,
-              updatedAt: new Date().toISOString(),
-            }
-          : t
-      )
-    );
-  }, []);
+  const updateTask = useCallback(
+    (
+      id: string,
+      updates: {
+        title?: string;
+        description?: string;
+        priority?: TaskPriority;
+        category?: TaskCategory;
+        dueDate?: string;
+        status?: TaskStatus;
+        subtasks?: { id?: string; title: string; completed: boolean }[];
+      }
+    ) => {
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (t.id !== id) return t;
+          const updatedSubtasks: SubTask[] = updates.subtasks
+            ? updates.subtasks.map((st) => ({
+                id: st.id || generateId(),
+                title: st.title.trim(),
+                completed: st.completed || false,
+              }))
+            : t.subtasks;
+
+          return {
+            ...t,
+            ...updates,
+            subtasks: updatedSubtasks,
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      );
+    },
+    []
+  );
 
   // Eliminar una tarea
   const deleteTask = useCallback((id: string) => {

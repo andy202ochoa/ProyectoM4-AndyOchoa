@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTheme } from './hooks/useTheme';
 import { useTasks } from './hooks/useTasks';
+import { useNotes } from './hooks/useNotes';
 import { Header, BottomNav, NavTab } from './components/common';
 import { TasksPage } from './pages/TasksPage';
+import { NotesPage } from './pages/NotesPage';
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
   const taskHook = useTasks();
+  const noteHook = useNotes();
   const [currentTab, setCurrentTab] = useState<NavTab>('tasks');
+
+  // Conectar el buscador dinámicamente según la pestaña activa
+  const isNotesTab = currentTab === 'notes';
+  const currentSearchQuery = isNotesTab ? noteHook.searchQuery : taskHook.searchQuery;
+  const handleSearchChange = (query: string) => {
+    if (isNotesTab) {
+      noteHook.setSearchQuery(query);
+    } else {
+      taskHook.setSearchQuery(query);
+    }
+  };
 
   return (
     <div className="app-shell">
@@ -23,20 +37,23 @@ export default function App() {
         <Header
           theme={theme}
           onToggleTheme={toggleTheme}
-          title="TaskFlow"
-          subtitle="Tus tareas y notas organizadas"
-          searchQuery={taskHook.searchQuery}
-          onSearchChange={taskHook.setSearchQuery}
+          title={isNotesTab ? 'Mis Notas' : currentTab === 'stats' ? 'Progreso' : 'TaskFlow'}
+          subtitle={
+            isNotesTab
+              ? 'Ideas, apuntes y notas rápidas'
+              : currentTab === 'stats'
+              ? 'Métricas de productividad'
+              : 'Tus tareas organizadas'
+          }
+          searchQuery={currentSearchQuery}
+          onSearchChange={handleSearchChange}
+          showSearch={currentTab !== 'stats'}
         />
 
         {/* Contenido Principal */}
         <main className="main-content">
           {currentTab === 'tasks' && <TasksPage taskHook={taskHook} />}
-          {currentTab === 'notes' && (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)' }}>
-              <p>Módulo de Notas en preparación (Fase 5)</p>
-            </div>
-          )}
+          {currentTab === 'notes' && <NotesPage noteHook={noteHook} />}
           {currentTab === 'stats' && (
             <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)' }}>
               <p>Módulo de Métricas en preparación (Fase 6)</p>
@@ -49,7 +66,7 @@ export default function App() {
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
           pendingTasksCount={taskHook.counts.activas}
-          totalNotesCount={4}
+          totalNotesCount={noteHook.totalNotesCount}
         />
       </div>
     </div>

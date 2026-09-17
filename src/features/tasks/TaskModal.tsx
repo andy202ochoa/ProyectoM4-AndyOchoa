@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { SubTask, Task, TaskCategory, TaskPriority } from '../../types';
+import { useState, useEffect } from 'react';
+import { Task, TaskCategory, TaskPriority } from '../../types';
 import { Modal } from '../../components/common/Modal';
 import { CATEGORY_CONFIG, getTodayDateString, PRIORITY_CONFIG } from '../../utils';
 import { PlusIcon, TrashIcon } from '../../components/common/Icons';

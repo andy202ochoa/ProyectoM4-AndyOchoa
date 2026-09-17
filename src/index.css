@@ -558,3 +558,41 @@ html, body {
     transform: translateY(0) scale(1);
   }
 }
+
+/* Adaptación de colores de notas para tema oscuro */
+[data-theme='dark'] .note-card-dynamic[data-color='menta'] {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #a7f3d0 !important;
+}
+[data-theme='dark'] .note-card-dynamic[data-color='lavanda'] {
+  background-color: rgba(139, 92, 246, 0.14) !important;
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  color: #ddd6fe !important;
+}
+[data-theme='dark'] .note-card-dynamic[data-color='coral'] {
+  background-color: rgba(244, 63, 94, 0.14) !important;
+  border-color: rgba(244, 63, 94, 0.35) !important;
+  color: #fecdd3 !important;
+}
+[data-theme='dark'] .note-card-dynamic[data-color='cielo'] {
+  background-color: rgba(14, 165, 233, 0.14) !important;
+  border-color: rgba(14, 165, 233, 0.35) !important;
+  color: #bae6fd !important;
+}
+[data-theme='dark'] .note-card-dynamic[data-color='ambar'] {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #fde68a !important;
+}
+[data-theme='dark'] .note-card-dynamic[data-color='grafito'] {
+  background-color: #1a2234 !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+[data-theme='dark'] .note-card-dynamic .icon-btn {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: inherit !important;
+}
+

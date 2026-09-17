@@ -1,5 +1,4 @@
-import React from 'react';
-import { PriorityFilter, TaskFilter, TaskPriority } from '../../types';
+import { PriorityFilter, TaskFilter } from '../../types';
 
 interface TaskFilterBarProps {
   currentStatus: TaskFilter;
