@@ -12,20 +12,16 @@ const getAuthErrorMessage = (error: unknown) => {
 
     switch (code) {
       case "auth/invalid-email":
-        return "El correo no es válido.";
-      case "auth/user-disabled":
-        return "Esta cuenta está deshabilitada.";
       case "auth/user-not-found":
-        return "No existe un usuario con ese correo.";
-      case "auth/wrong-password":
       case "auth/invalid-credential":
-        return "Correo o contraseña incorrectos.";
+      case "auth/wrong-password":
+        return "El gmail que uso no existe o es invalido entente de nuevo";
       default:
-        return "No se pudo iniciar sesión. Intenta nuevamente.";
+        return "El gmail que uso no existe o es invalido entente de nuevo";
     }
   }
 
-  return "No se pudo iniciar sesión. Intenta nuevamente.";
+  return "El gmail que uso no existe o es invalido entente de nuevo";
 };
 
 export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
@@ -41,7 +37,12 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
     const rawPassword = password; // No usamos .trim() para conservar la contraseña exacta
 
     if (!normalizedEmail || !rawPassword) {
-      setError("Ingresa correo y contraseña.");
+      setError("El gmail que uso no existe o es invalido entente de nuevo");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError("El gmail que uso no existe o es invalido entente de nuevo");
       return;
     }
 
