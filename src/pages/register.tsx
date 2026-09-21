@@ -109,3 +109,5 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
     </div>
   );
 }
+
+//probando cambios nuevos para vericar el funcionamiento de vercel //
