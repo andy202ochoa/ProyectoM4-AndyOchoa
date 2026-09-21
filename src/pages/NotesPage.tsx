@@ -4,7 +4,7 @@ import { useNotes } from '../hooks/useNotes';
 import { NoteCard, NoteModal } from '../features/notes';
 import { NotesIcon, PinIcon, PlusIcon, TagIcon } from '../components/common/Icons';
 import { NOTE_COLOR_CONFIG } from '../utils';
-import './NotesPage.css';
+import './pages.css';
 
 interface NotesPageProps {
   noteHook: ReturnType<typeof useNotes>;

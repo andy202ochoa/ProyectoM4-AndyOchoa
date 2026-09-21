@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { NotesIcon, PlusIcon, TasksIcon } from './Icons';
-import './QuickAddFAB.css';
+import './components.css';
 
 interface QuickAddFABProps {
   onNewTask: () => void;

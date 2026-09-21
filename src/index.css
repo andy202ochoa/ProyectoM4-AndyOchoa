@@ -1,11 +1,9 @@
 /* ==========================================================================
    TASKFLOW & NOTES - DESIGN SYSTEM & MOBILE-FIRST STYLES
    ========================================================================== */
-
 :root {
   /* Fuente */
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-
   /* Paleta Claro (Light Theme) */
   --bg-app: #f8fafc;
   --bg-surface: #ffffff;
@@ -14,31 +12,25 @@
   --bg-input: #f1f5f9;
   --border-color: #e2e8f0;
   --border-focus: #6366f1;
-
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
-
   --primary: #4f46e5;
   --primary-hover: #4338ca;
   --primary-light: #eef2ff;
   --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
   --accent-gradient: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
-
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.35);
-
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-full: 9999px;
-
   --bottom-nav-height: 70px;
   --header-height: 64px;
 }
-
 [data-theme='dark'] {
   /* Paleta Oscuro (Dark Theme / Glassmorphism) */
   --bg-app: #090d16;
@@ -48,35 +40,27 @@
   --bg-input: #1e293b;
   --border-color: rgba(255, 255, 255, 0.08);
   --border-focus: #818cf8;
-
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-
   --primary: #6366f1;
   --primary-hover: #818cf8;
   --primary-light: rgba(99, 102, 241, 0.18);
   --primary-gradient: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%);
   --accent-gradient: linear-gradient(135deg, #f43f5e 0%, #8b5cf6 100%);
-
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.6);
   --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.4);
 }
-
 /* Resets y Base */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
-
-html,
-body {
+html, body {
   width: 100%;
   min-height: 100%;
   font-family: var(--font-main);
@@ -87,7 +71,6 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
   overflow-x: hidden;
 }
-
 /* Envoltura de aplicación Mobile-First */
 .app-shell {
   min-height: 100dvh;
@@ -96,7 +79,6 @@ body {
   align-items: flex-start;
   background-color: var(--bg-app);
 }
-
 .mobile-frame {
   width: 100%;
   max-width: 480px;
@@ -108,15 +90,11 @@ body {
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.15);
   padding-bottom: calc(var(--bottom-nav-height) + 12px);
 }
-
 @media (min-width: 540px) {
   .app-shell {
     padding: 20px 0;
-    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 40%),
-      radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 40%),
-      var(--bg-app);
+    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 40%),       radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 40%),       var(--bg-app);
   }
-
   .mobile-frame {
     border-radius: 36px;
     border: 1px solid var(--border-color);
@@ -125,12 +103,10 @@ body {
     max-height: 880px;
   }
 }
-
 /* Barra de Estado Ficticia para visual móvil en Desktop */
 .mobile-notch-bar {
   display: none;
 }
-
 @media (min-width: 540px) {
   .mobile-notch-bar {
     display: flex;
@@ -144,7 +120,6 @@ body {
     z-index: 50;
   }
 }
-
 /* Contenido Principal con Scroll Suave */
 .main-content {
   flex: 1;
@@ -153,7 +128,6 @@ body {
   padding: 16px;
   -webkit-overflow-scrolling: touch;
 }
-
 /* Header Superior */
 .app-header {
   position: sticky;
@@ -169,13 +143,11 @@ body {
   justify-content: space-between;
   gap: 12px;
 }
-
 .header-brand {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .header-logo {
   width: 36px;
   height: 36px;
@@ -187,7 +159,6 @@ body {
   color: #ffffff;
   box-shadow: var(--shadow-sm);
 }
-
 .header-title {
   font-size: 18px;
   font-weight: 700;
@@ -195,19 +166,16 @@ body {
   color: var(--text-primary);
   line-height: 1.2;
 }
-
 .header-subtitle {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
 }
-
 .header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 /* Botones de Icono */
 .icon-btn {
   width: 38px;
@@ -222,17 +190,14 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .icon-btn:hover {
   color: var(--primary);
   border-color: var(--primary);
   transform: scale(1.05);
 }
-
 .icon-btn:active {
   transform: scale(0.95);
 }
-
 /* Barra de Navegación Inferior (BottomNav) */
 .bottom-nav {
   position: absolute;
@@ -250,7 +215,6 @@ body {
   padding: 0 12px;
   z-index: 45;
 }
-
 .nav-item {
   flex: 1;
   display: flex;
@@ -270,17 +234,14 @@ body {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
-
 .nav-item.active {
   color: var(--primary);
 }
-
 .nav-item.active .nav-icon-wrap {
   background-color: var(--primary-light);
   color: var(--primary);
   transform: translateY(-2px);
 }
-
 .nav-icon-wrap {
   width: 34px;
   height: 30px;
@@ -291,7 +252,6 @@ body {
   transition: all 0.2s ease;
   position: relative;
 }
-
 .nav-badge-pill {
   position: absolute;
   top: -2px;
@@ -309,7 +269,6 @@ body {
   padding: 0 4px;
   box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
 }
-
 /* Botón de Acción Flotante (FAB) */
 .fab-container {
   position: absolute;
@@ -317,7 +276,6 @@ body {
   right: 18px;
   z-index: 48;
 }
-
 .fab-main {
   width: 52px;
   height: 52px;
@@ -332,15 +290,12 @@ body {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
 .fab-main:hover {
   transform: scale(1.08) rotate(4deg);
 }
-
 .fab-main:active {
   transform: scale(0.92);
 }
-
 .fab-menu {
   position: absolute;
   bottom: 64px;
@@ -351,7 +306,6 @@ body {
   align-items: flex-end;
   animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .fab-option {
   display: flex;
   align-items: center;
@@ -368,12 +322,10 @@ body {
   white-space: nowrap;
   transition: all 0.2s ease;
 }
-
 .fab-option:hover {
   border-color: var(--primary);
   transform: translateX(-4px);
 }
-
 /* Modal Bottom-Sheet */
 .modal-backdrop {
   position: fixed;
@@ -386,7 +338,6 @@ body {
   align-items: flex-end;
   animation: fadeIn 0.2s ease-out;
 }
-
 .modal-sheet {
   width: 100%;
   max-width: 480px;
@@ -402,7 +353,6 @@ body {
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
-
 .modal-handle-bar {
   width: 40px;
   height: 4px;
@@ -410,7 +360,6 @@ body {
   border-radius: 2px;
   margin: 10px auto 4px;
 }
-
 .modal-header {
   padding: 12px 20px;
   display: flex;
@@ -418,13 +367,11 @@ body {
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
 }
-
 .modal-title {
   font-size: 17px;
   font-weight: 700;
   color: var(--text-primary);
 }
-
 .modal-body {
   padding: 18px 20px;
   overflow-y: auto;
@@ -433,7 +380,6 @@ body {
   flex-direction: column;
   gap: 16px;
 }
-
 .modal-footer {
   padding: 14px 20px;
   border-top: 1px solid var(--border-color);
@@ -443,14 +389,12 @@ body {
   gap: 10px;
   background: var(--bg-surface-elevated);
 }
-
 /* Campos de Formulario */
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .form-label {
   font-size: 12px;
   font-weight: 600;
@@ -458,10 +402,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
-.form-input,
-.form-textarea,
-.form-select {
+.form-input, .form-textarea, .form-select {
   width: 100%;
   padding: 10px 14px;
   border-radius: var(--radius-md);
@@ -473,19 +414,14 @@ body {
   outline: none;
   transition: all 0.2s ease;
 }
-
-.form-input:focus,
-.form-textarea:focus,
-.form-select:focus {
+.form-input:focus, .form-textarea:focus, .form-select:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
-
 .form-textarea {
   min-height: 80px;
   resize: vertical;
 }
-
 /* Botones */
 .btn {
   padding: 10px 18px;
@@ -500,40 +436,33 @@ body {
   gap: 6px;
   transition: all 0.2s ease;
 }
-
 .btn-primary {
   background: var(--primary-gradient);
   color: #ffffff;
   box-shadow: var(--shadow-sm);
 }
-
 .btn-primary:hover {
   opacity: 0.95;
   transform: translateY(-1px);
 }
-
 .btn-secondary {
   background: var(--bg-input);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
 }
-
 .btn-secondary:hover {
   background: var(--border-color);
   color: var(--text-primary);
 }
-
 .btn-danger {
   background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
-
 .btn-danger:hover {
   background: #ef4444;
   color: #ffffff;
 }
-
 /* Badges e Insignias */
 .badge {
   display: inline-flex;
@@ -545,77 +474,64 @@ body {
   font-weight: 600;
   line-height: 1.2;
 }
-
 /* Animaciones */
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
 }
-
 @keyframes slideUp {
   from {
     transform: translateY(100%);
   }
-
   to {
     transform: translateY(0);
   }
 }
-
 @keyframes slideUpFade {
   from {
     opacity: 0;
     transform: translateY(12px) scale(0.95);
   }
-
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
-
 /* Adaptación de colores de notas para tema oscuro */
 [data-theme='dark'] .note-card-dynamic[data-color='menta'] {
   background-color: rgba(16, 185, 129, 0.14) !important;
   border-color: rgba(16, 185, 129, 0.35) !important;
   color: #a7f3d0 !important;
 }
-
 [data-theme='dark'] .note-card-dynamic[data-color='lavanda'] {
   background-color: rgba(139, 92, 246, 0.14) !important;
   border-color: rgba(139, 92, 246, 0.35) !important;
   color: #ddd6fe !important;
 }
-
 [data-theme='dark'] .note-card-dynamic[data-color='coral'] {
   background-color: rgba(244, 63, 94, 0.14) !important;
   border-color: rgba(244, 63, 94, 0.35) !important;
   color: #fecdd3 !important;
 }
-
 [data-theme='dark'] .note-card-dynamic[data-color='cielo'] {
   background-color: rgba(14, 165, 233, 0.14) !important;
   border-color: rgba(14, 165, 233, 0.35) !important;
   color: #bae6fd !important;
 }
-
 [data-theme='dark'] .note-card-dynamic[data-color='ambar'] {
   background-color: rgba(245, 158, 11, 0.14) !important;
   border-color: rgba(245, 158, 11, 0.35) !important;
   color: #fde68a !important;
 }
-
 [data-theme='dark'] .note-card-dynamic[data-color='grafito'] {
   background-color: #1a2234 !important;
   border-color: #334155 !important;
   color: #f1f5f9 !important;
 }
-
 [data-theme='dark'] .note-card-dynamic .icon-btn {
   background-color: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.15) !important;

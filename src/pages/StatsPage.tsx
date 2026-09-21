@@ -5,7 +5,7 @@ import { StorageService } from '../services';
 import { CATEGORY_CONFIG, PRIORITY_CONFIG, isOverdue } from '../utils';
 import { ExportIcon, ResetIcon, SparklesIcon, TagIcon } from '../components/common/Icons';
 import { TaskCategory, TaskPriority } from '../types';
-import './StatsPage.css';
+import './pages.css';
 
 interface StatsPageProps {
   taskHook: ReturnType<typeof useTasks>;

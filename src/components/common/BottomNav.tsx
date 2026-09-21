@@ -1,6 +1,6 @@
 import React from 'react';
 import { NotesIcon, StatsIcon, TasksIcon } from './Icons';
-import './BottomNav.css';
+import './components.css';
 
 export type NavTab = 'tasks' | 'notes' | 'stats';
 

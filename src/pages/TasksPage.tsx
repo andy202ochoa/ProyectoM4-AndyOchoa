@@ -3,7 +3,7 @@ import { Task } from '../types';
 import { useTasks } from '../hooks/useTasks';
 import { TaskFilterBar, TaskItem, TaskModal } from '../features/tasks';
 import { CheckCircleIcon, PlusIcon, SparklesIcon } from '../components/common/Icons';
-import './TasksPage.css';
+import './pages.css';
 
 interface TasksPageProps {
   taskHook: ReturnType<typeof useTasks>;

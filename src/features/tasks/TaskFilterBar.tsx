@@ -1,6 +1,6 @@
 import React from 'react';
 import { PriorityFilter, TaskFilter } from '../../types';
-import './TaskFilterBar.css';
+import './tasks.css';
 
 interface TaskFilterBarProps {
   currentStatus: TaskFilter;

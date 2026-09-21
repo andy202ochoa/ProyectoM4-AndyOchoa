@@ -3,7 +3,7 @@ import { Note } from '../../types';
 import { formatRelativeTime } from '../../utils';
 import { EditIcon, PinIcon, TrashIcon } from '../../components/common/Icons';
 import { TagBadge } from '../../components/common/Badge';
-import './NoteCard.css';
+import './notes.css';
 
 interface NoteCardProps {
   note: Note;

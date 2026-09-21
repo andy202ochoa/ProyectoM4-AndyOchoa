@@ -3,7 +3,7 @@ import { Task } from '../../types';
 import { formatDueDate, isDueToday, isOverdue } from '../../utils';
 import { CalendarIcon, CheckIcon, CircleIcon, EditIcon, TrashIcon } from '../../components/common/Icons';
 import { CategoryBadge, PriorityBadge } from '../../components/common/Badge';
-import './TaskItem.css';
+import './tasks.css';
 
 interface TaskItemProps {
   task: Task;

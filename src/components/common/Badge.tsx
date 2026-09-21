@@ -1,7 +1,7 @@
 import React from 'react';
 import { TaskCategory, TaskPriority, TaskStatus } from '../../types';
 import { CATEGORY_CONFIG, PRIORITY_CONFIG, STATUS_CONFIG } from '../../utils';
-import './Badge.css';
+import './components.css';
 
 interface PriorityBadgeProps {
   priority: TaskPriority;

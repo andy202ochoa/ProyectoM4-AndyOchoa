@@ -3,7 +3,7 @@ import { Task, TaskCategory, TaskPriority } from '../../types';
 import { Modal } from '../../components/common/Modal';
 import { CATEGORY_CONFIG, getTodayDateString, PRIORITY_CONFIG } from '../../utils';
 import { PlusIcon, TrashIcon } from '../../components/common/Icons';
-import './TaskModal.css';
+import './tasks.css';
 
 interface TaskModalProps {
   isOpen: boolean;

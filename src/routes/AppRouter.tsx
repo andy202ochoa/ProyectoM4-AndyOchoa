@@ -5,7 +5,7 @@ import { useNotes } from '../hooks/useNotes';
 import { TasksPage } from '../pages/TasksPage';
 import { NotesPage } from '../pages/NotesPage';
 import { StatsPage } from '../pages/StatsPage';
-import './AppRouter.css';
+import './routes.css';
 
 interface AppRouterProps {
   currentTab: NavTab;

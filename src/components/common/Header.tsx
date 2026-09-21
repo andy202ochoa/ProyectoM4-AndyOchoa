@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MoonIcon, SearchIcon, SunIcon, TasksIcon } from './Icons';
 import { Theme } from '../../hooks/useTheme';
-import './Header.css';
+import './components.css';
 
 interface HeaderProps {
   theme: Theme;

@@ -4,7 +4,7 @@ import { Modal } from '../../components/common/Modal';
 import { NOTE_COLOR_CONFIG } from '../../utils';
 import { CheckIcon, PinIcon, PlusIcon } from '../../components/common/Icons';
 import { TagBadge } from '../../components/common/Badge';
-import './NoteModal.css';
+import './notes.css';
 
 interface NoteModalProps {
   isOpen: boolean;
