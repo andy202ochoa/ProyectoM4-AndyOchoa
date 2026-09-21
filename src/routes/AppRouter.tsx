@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavTab } from '../components/common';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { useTasks } from '../hooks/useTasks';
 import { useNotes } from '../hooks/useNotes';
 import { TasksPage } from '../pages/TasksPage';
@@ -8,21 +8,23 @@ import { StatsPage } from '../pages/StatsPage';
 import './routes.css';
 
 interface AppRouterProps {
-  currentTab: NavTab;
   taskHook: ReturnType<typeof useTasks>;
   noteHook: ReturnType<typeof useNotes>;
 }
 
 export const AppRouter: React.FC<AppRouterProps> = ({
-  currentTab,
   taskHook,
   noteHook,
 }) => {
   return (
     <div className="app-router-content">
-      {currentTab === 'tasks' && <TasksPage taskHook={taskHook} />}
-      {currentTab === 'notes' && <NotesPage noteHook={noteHook} />}
-      {currentTab === 'stats' && <StatsPage taskHook={taskHook} noteHook={noteHook} />}
+      <Routes>
+        <Route path="/" element={<Navigate to="/tasks" replace />} />
+        <Route path="/tasks" element={<TasksPage taskHook={taskHook} />} />
+        <Route path="/notes" element={<NotesPage noteHook={noteHook} />} />
+        <Route path="/stats" element={<StatsPage taskHook={taskHook} noteHook={noteHook} />} />
+        <Route path="*" element={<Navigate to="/tasks" replace />} />
+      </Routes>
     </div>
   );
 };

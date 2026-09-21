@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import { useTasks } from './hooks/useTasks';
@@ -10,18 +11,31 @@ import { NoteModal } from './features/notes';
 import { LoginPage } from './pages/login';
 import { RegisterPage } from './pages/register';
 
+const tabToPath: Record<NavTab, string> = {
+  tasks: '/tasks',
+  notes: '/notes',
+  stats: '/stats',
+};
+
+const pathToTab: Record<string, NavTab> = {
+  '/tasks': 'tasks',
+  '/notes': 'notes',
+  '/stats': 'stats',
+};
+
 export default function App() {
   const { user, loading } = useAuth();
-  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { theme, toggleTheme } = useTheme();
   const taskHook = useTasks();
   const noteHook = useNotes();
-  const [currentTab, setCurrentTab] = useState<NavTab>('tasks');
 
   const [isQuickTaskModalOpen, setIsQuickTaskModalOpen] = useState(false);
   const [isQuickNoteModalOpen, setIsQuickNoteModalOpen] = useState(false);
 
+  const currentTab: NavTab = pathToTab[location.pathname] ?? 'tasks';
   const isNotesTab = currentTab === 'notes';
   const isTasksTab = currentTab === 'tasks';
   const currentSearchQuery = isNotesTab ? noteHook.searchQuery : taskHook.searchQuery;
@@ -34,16 +48,28 @@ export default function App() {
     }
   };
 
+  const handleSelectTab = (tab: NavTab) => {
+    navigate(tabToPath[tab]);
+  };
+
   // --- Gate de autenticación ---
   if (loading) {
     return <p>Cargando…</p>;
   }
 
   if (!user) {
-    return authView === 'login' ? (
-      <LoginPage onSwitchToRegister={() => setAuthView('register')} />
-    ) : (
-      <RegisterPage onSwitchToLogin={() => setAuthView('login')} />
+    return (
+      <Routes>
+        <Route
+          path="/login"
+          element={<LoginPage onSwitchToRegister={() => navigate('/register')} />}
+        />
+        <Route
+          path="/register"
+          element={<RegisterPage onSwitchToLogin={() => navigate('/login')} />}
+        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     );
   }
   // --- Fin gate ---
@@ -74,11 +100,7 @@ export default function App() {
         />
 
         <main className="main-content">
-          <AppRouter
-            currentTab={currentTab}
-            taskHook={taskHook}
-            noteHook={noteHook}
-          />
+          <AppRouter taskHook={taskHook} noteHook={noteHook} />
         </main>
 
         <QuickAddFAB
@@ -88,7 +110,7 @@ export default function App() {
 
         <BottomNav
           currentTab={currentTab}
-          onSelectTab={setCurrentTab}
+          onSelectTab={handleSelectTab}
           pendingTasksCount={taskHook.counts.activas}
           totalNotesCount={noteHook.totalNotesCount}
         />
@@ -98,7 +120,7 @@ export default function App() {
           onClose={() => setIsQuickTaskModalOpen(false)}
           onSave={(data) => {
             taskHook.addTask(data);
-            setCurrentTab('tasks');
+            navigate('/tasks');
           }}
         />
 
@@ -107,7 +129,7 @@ export default function App() {
           onClose={() => setIsQuickNoteModalOpen(false)}
           onSave={(data) => {
             noteHook.addNote(data);
-            setCurrentTab('notes');
+            navigate('/notes');
           }}
         />
       </div>
