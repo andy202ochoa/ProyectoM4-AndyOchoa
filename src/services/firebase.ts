@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
 
 // Configuración cargada desde variables de entorno
 const firebaseConfig = {
@@ -14,6 +14,4 @@ const firebaseConfig = {
 
 // Inicializar app
 export const app = initializeApp(firebaseConfig);
-
-// Inicializar Analytics solo en entorno de navegador
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+export const auth = getAuth(app);
