@@ -60,6 +60,7 @@ export default function App() {
   if (!user) {
     return (
       <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route
           path="/login"
           element={<LoginPage onSwitchToRegister={() => navigate('/register')} />}
