@@ -6,9 +6,9 @@ import {
 } from "firebase/auth";
 
 export const login = async (email: string, password: string): Promise<UserCredential> => {
-  return createUserWithEmailAndPassword(auth, email, password);
+  return signInWithEmailAndPassword(auth, email, password);
 };
 
 export const register = async (email: string, password: string): Promise<UserCredential> => {
-  return  signInWithEmailAndPassword(auth, email, password);
+  return createUserWithEmailAndPassword(auth, email, password);
 };
