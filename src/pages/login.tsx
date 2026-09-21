@@ -18,7 +18,8 @@ const getAuthErrorMessage = (error: unknown) => {
       case "auth/user-not-found":
         return "No existe un usuario con ese correo.";
       case "auth/wrong-password":
-        return "La contraseña es incorrecta.";
+      case "auth/invalid-credential":
+        return "Correo o contraseña incorrectos.";
       default:
         return "No se pudo iniciar sesión. Intenta nuevamente.";
     }
@@ -33,11 +34,13 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = async () => {
-    const normalizedEmail = email.trim();
-    const normalizedPassword = password.trim();
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (!normalizedEmail || !normalizedPassword) {
+    const normalizedEmail = email.trim();
+    const rawPassword = password; // No usamos .trim() para conservar la contraseña exacta
+
+    if (!normalizedEmail || !rawPassword) {
       setError("Ingresa correo y contraseña.");
       return;
     }
@@ -46,7 +49,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
     setIsSubmitting(true);
 
     try {
-      await login(normalizedEmail, normalizedPassword);
+      await login(normalizedEmail, rawPassword);
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
@@ -57,7 +60,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Login</h2>
+        <h2>Iniciar sesión</h2>
 
         {error && (
           <div className="auth-error" role="alert">
@@ -65,26 +68,32 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
           </div>
         )}
 
-        <input
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (error) setError("");
-          }}
-          placeholder="Correo"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            if (error) setError("");
-          }}
-          placeholder="Contraseña"
-        />
-        <button type="button" onClick={handleLogin} disabled={isSubmitting}>
-          {isSubmitting ? "Ingresando..." : "Entrar"}
-        </button>
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) setError("");
+            }}
+            placeholder="Correo"
+            autoComplete="username"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError("");
+            }}
+            placeholder="Contraseña"
+            autoComplete="current-password"
+          />
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Ingresando..." : "Entrar"}
+          </button>
+        </form>
+
         <p className="auth-footer-text">
           ¿No tienes cuenta?{" "}
           <button

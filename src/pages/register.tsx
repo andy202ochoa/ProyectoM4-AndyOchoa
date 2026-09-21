@@ -31,11 +31,13 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRegister = async () => {
-    const normalizedEmail = email.trim();
-    const normalizedPassword = password.trim();
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (!normalizedEmail || !normalizedPassword) {
+    const normalizedEmail = email.trim();
+    const rawPassword = password; // No usamos .trim() para conservar la contraseña exacta
+
+    if (!normalizedEmail || !rawPassword) {
       setError("Ingresa correo y contraseña.");
       return;
     }
@@ -44,7 +46,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
     setIsSubmitting(true);
 
     try {
-      await register(normalizedEmail, normalizedPassword);
+      await register(normalizedEmail, rawPassword);
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
@@ -63,26 +65,32 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
           </div>
         )}
 
-        <input
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (error) setError("");
-          }}
-          placeholder="Correo"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            if (error) setError("");
-          }}
-          placeholder="Contraseña"
-        />
-        <button type="button" onClick={handleRegister} disabled={isSubmitting}>
-          {isSubmitting ? "Creando cuenta..." : "Registrarse"}
-        </button>
+        <form onSubmit={handleRegister}>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) setError("");
+            }}
+            placeholder="Correo"
+            autoComplete="email"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError("");
+            }}
+            placeholder="Contraseña"
+            autoComplete="new-password"
+          />
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creando cuenta..." : "Registrarse"}
+          </button>
+        </form>
+
         <p className="auth-footer-text">
           ¿Ya tienes cuenta?{" "}
           <button
