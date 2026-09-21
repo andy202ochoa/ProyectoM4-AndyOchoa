@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { register } from "../services/authService";
+import "./auth.css";
 
-export default function RegisterPage() {
+interface RegisterPageProps {
+  onSwitchToLogin: () => void;
+}
+
+export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -15,11 +20,28 @@ export default function RegisterPage() {
   };
 
   return (
-    <div>
-      <h2>Registro</h2>
-      <input onChange={(e) => setEmail(e.target.value)} />
-      <input type="password" onChange={(e) => setPassword(e.target.value)} />
-      <button onClick={handleRegister}>Registrarse</button>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Crear cuenta</h2>
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Correo"
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Contraseña"
+        />
+        <button onClick={handleRegister}>Registrarse</button>
+        <p className="auth-footer-text">
+          ¿Ya tienes cuenta?{" "}
+          <button className="auth-switch" onClick={onSwitchToLogin}>
+            Inicia sesión
+          </button>
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import { useTasks } from './hooks/useTasks';
 import { useNotes } from './hooks/useNotes';
@@ -6,18 +7,21 @@ import { Header, BottomNav, NavTab, QuickAddFAB } from './components/common';
 import { AppRouter } from './routes/AppRouter';
 import { TaskModal } from './features/tasks';
 import { NoteModal } from './features/notes';
+import { LoginPage } from './pages/login';
+import { RegisterPage } from './pages/register';
 
 export default function App() {
+  const { user, loading } = useAuth();
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+
   const { theme, toggleTheme } = useTheme();
   const taskHook = useTasks();
   const noteHook = useNotes();
   const [currentTab, setCurrentTab] = useState<NavTab>('tasks');
 
-  // Modales globales para creación rápida vía FAB
   const [isQuickTaskModalOpen, setIsQuickTaskModalOpen] = useState(false);
   const [isQuickNoteModalOpen, setIsQuickNoteModalOpen] = useState(false);
 
-  // Sincronización del buscador según la pestaña activa
   const isNotesTab = currentTab === 'notes';
   const isTasksTab = currentTab === 'tasks';
   const currentSearchQuery = isNotesTab ? noteHook.searchQuery : taskHook.searchQuery;
@@ -30,17 +34,29 @@ export default function App() {
     }
   };
 
+  // --- Gate de autenticación ---
+  if (loading) {
+    return <p>Cargando…</p>;
+  }
+
+  if (!user) {
+    return authView === 'login' ? (
+      <LoginPage onSwitchToRegister={() => setAuthView('register')} />
+    ) : (
+      <RegisterPage onSwitchToLogin={() => setAuthView('login')} />
+    );
+  }
+  // --- Fin gate ---
+
   return (
     <div className="app-shell">
       <div className="mobile-frame">
-        {/* Barra de estado ficticia para entorno Desktop */}
         <div className="mobile-notch-bar">
           <span>9:41</span>
           <span>TaskFlow Mobile</span>
           <span>100% 🔋</span>
         </div>
 
-        {/* Encabezado adaptable */}
         <Header
           theme={theme}
           onToggleTheme={toggleTheme}
@@ -57,7 +73,6 @@ export default function App() {
           showSearch={currentTab !== 'stats'}
         />
 
-        {/* Vistas enrutadas */}
         <main className="main-content">
           <AppRouter
             currentTab={currentTab}
@@ -66,13 +81,11 @@ export default function App() {
           />
         </main>
 
-        {/* Botón de Acción Flotante (+ FAB) */}
         <QuickAddFAB
           onNewTask={() => setIsQuickTaskModalOpen(true)}
           onNewNote={() => setIsQuickNoteModalOpen(true)}
         />
 
-        {/* Barra de Navegación Inferior */}
         <BottomNav
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
@@ -80,7 +93,6 @@ export default function App() {
           totalNotesCount={noteHook.totalNotesCount}
         />
 
-        {/* Modales globales de creación rápida */}
         <TaskModal
           isOpen={isQuickTaskModalOpen}
           onClose={() => setIsQuickTaskModalOpen(false)}
