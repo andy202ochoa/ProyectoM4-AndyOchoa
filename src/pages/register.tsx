@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { register } from "../services/authService";
+import { loginWithGoogle, register } from "../services/authService";
 import "./auth.css";
 
 interface RegisterPageProps {
@@ -28,6 +28,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +55,27 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
       setError(getAuthErrorMessage(err));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    setError("");
+    setIsGoogleLoading(true);
+
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      const message = err && typeof err === "object" && "code" in err
+        ? String((err as { code?: string }).code)
+        : "";
+
+      setError(
+        message === "auth/popup-closed-by-user"
+          ? "Se canceló el acceso con Google."
+          : "No se pudo continuar con Google. Inténtalo de nuevo."
+      );
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -89,10 +111,19 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
             placeholder="Contraseña"
             autoComplete="new-password"
           />
-          <button type="submit" disabled={isSubmitting}>
+          <button type="submit" disabled={isSubmitting || isGoogleLoading}>
             {isSubmitting ? "Creando cuenta..." : "Registrarse"}
           </button>
         </form>
+
+        <button
+          type="button"
+          className="auth-google-btn"
+          onClick={handleGoogleRegister}
+          disabled={isSubmitting || isGoogleLoading}
+        >
+          {isGoogleLoading ? "Conectando..." : "Continuar con Google"}
+        </button>
 
         <p className="auth-footer-text">
           ¿Ya tienes cuenta?{" "}
@@ -100,7 +131,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
             type="button"
             className="auth-switch"
             onClick={onSwitchToLogin}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isGoogleLoading}
           >
             Inicia sesión
           </button>
