@@ -99,6 +99,12 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
   };
 
   const handleLogout = async () => {
+    const shouldLogout = window.confirm('¿Desea cerrar sesión?');
+
+    if (!shouldLogout) {
+      return;
+    }
+
     try {
       await signOut(auth);
     } catch {
