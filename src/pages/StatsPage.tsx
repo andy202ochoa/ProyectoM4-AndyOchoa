@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
+import { signOut } from 'firebase/auth';
 import { useTasks } from '../hooks/useTasks';
 import { useNotes } from '../hooks/useNotes';
 import { StorageService } from '../services';
+import { auth } from '../services/firebase';
 import { CATEGORY_CONFIG, PRIORITY_CONFIG, isOverdue } from '../utils';
 import { ExportIcon, ResetIcon, SparklesIcon, TagIcon } from '../components/common/Icons';
 import { TaskCategory, TaskPriority } from '../types';
@@ -93,6 +95,14 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
       StorageService.resetToDefaults();
       showNotification('¡Datos de demostración restablecidos! Recargando...');
       setTimeout(() => window.location.reload(), 600);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch {
+      showNotification('No se pudo cerrar sesión. Inténtalo de nuevo.');
     }
   };
 
@@ -334,6 +344,14 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
           >
             <ResetIcon size={16} />
             <span>Restablecer Datos de Demostración</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="btn btn-secondary stats-full-width-btn"
+          >
+            <span>Cerrar sesión</span>
           </button>
         </div>
       </div>
