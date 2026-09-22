@@ -60,7 +60,7 @@ export function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Crear cuenta-NUEVO USUARIO</h2>
+        <h2>Crear cuenta</h2>
 
         {error && (
           <div className="auth-error" role="alert">
