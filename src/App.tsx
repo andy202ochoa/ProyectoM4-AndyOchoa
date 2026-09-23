@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { User } from 'firebase/auth';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import { useTasks } from './hooks/useTasks';
@@ -24,14 +25,18 @@ const pathToTab: Record<string, NavTab> = {
   '/stats': 'stats',
 };
 
-export default function App() {
-  const { user, loading } = useAuth();
+/**
+ * Componente que renderiza la app real. Solo se monta cuando YA hay
+ * un usuario autenticado y con correo verificado, así que es seguro
+ * llamar aquí a useTasks(user.uid) y useNotes(user.uid).
+ */
+function AuthenticatedApp({ user }: { user: User }) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const { theme, toggleTheme } = useTheme();
-  const taskHook = useTasks();
-  const noteHook = useNotes();
+  const taskHook = useTasks(user.uid);
+  const noteHook = useNotes(user.uid);
 
   const [isQuickTaskModalOpen, setIsQuickTaskModalOpen] = useState(false);
   const [isQuickNoteModalOpen, setIsQuickNoteModalOpen] = useState(false);
@@ -52,35 +57,6 @@ export default function App() {
   const handleSelectTab = (tab: NavTab) => {
     navigate(tabToPath[tab]);
   };
-
-  // --- Gate de autenticación ---
-  if (loading) {
-    return <p>Cargando…</p>;
-  }
-
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route
-          path="/login"
-          element={<LoginPage onSwitchToRegister={() => navigate('/register')} />}
-        />
-        <Route
-          path="/register"
-          element={<RegisterPage onSwitchToLogin={() => navigate('/login')} />}
-        />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    );
-  }
-
-  // Usuario autenticado pero sin verificar su correo (aplica solo a email/password;
-  // los usuarios de Google llegan con emailVerified en true automáticamente)
-  if (!user.emailVerified) {
-    return <VerifyEmailPage user={user} />;
-  }
-  // --- Fin gate ---
 
   return (
     <div className="app-shell">
@@ -108,7 +84,12 @@ export default function App() {
         />
 
         <main className="main-content">
-          <AppRouter taskHook={taskHook} noteHook={noteHook} />
+            <AppRouter
+              currentTab={currentTab}
+              taskHook={taskHook}
+              noteHook={noteHook}
+              uid={user.uid}
+            />
         </main>
 
         <QuickAddFAB
@@ -143,4 +124,40 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+export default function App() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // --- Gate de autenticación ---
+  if (loading) {
+    return <p>Cargando…</p>;
+  }
+
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route
+          path="/login"
+          element={<LoginPage onSwitchToRegister={() => navigate('/register')} />}
+        />
+        <Route
+          path="/register"
+          element={<RegisterPage onSwitchToLogin={() => navigate('/login')} />}
+        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  // Usuario autenticado pero sin verificar su correo (aplica solo a email/password;
+  // los usuarios de Google llegan con emailVerified en true automáticamente)
+  if (!user.emailVerified) {
+    return <VerifyEmailPage user={user} />;
+  }
+  // --- Fin gate ---
+
+  return <AuthenticatedApp user={user} />;
 }
