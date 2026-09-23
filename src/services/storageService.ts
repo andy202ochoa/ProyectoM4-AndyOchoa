@@ -1,9 +1,7 @@
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
 import { Note, Task } from '../types';
 import { getTodayDateString } from '../utils/dateUtils';
-
-const TASKS_STORAGE_KEY = 'taskflow_tasks_v1';
-const NOTES_STORAGE_KEY = 'taskflow_notes_v1';
-const THEME_STORAGE_KEY = 'taskflow_theme_v1';
 
 // Generar fechas de muestra relativas
 const today = getTodayDateString();
@@ -130,83 +128,102 @@ export const INITIAL_NOTES: Note[] = [
   },
 ];
 
-// Construye una clave de localStorage única por usuario
-const scopedKey = (base: string, uid: string) => `${base}_${uid}`;
+const THEME_STORAGE_KEY = 'taskflow_theme_v1';
+
+interface UserData {
+  tasks: Task[];
+  notes: Note[];
+}
+
+// Referencia al documento único del usuario en Firestore
+const userDocRef = (uid: string) => doc(db, 'userData', uid);
+
+/**
+ * Lee el documento del usuario. Si no existe todavía (primer login),
+ * lo crea con los datos semilla y los retorna.
+ */
+async function ensureUserDoc(uid: string): Promise<UserData> {
+  const ref = userDocRef(uid);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    const seed: UserData = { tasks: INITIAL_TASKS, notes: INITIAL_NOTES };
+    await setDoc(ref, seed);
+    return seed;
+  }
+
+  const data = snap.data();
+  return {
+    tasks: Array.isArray(data.tasks) ? (data.tasks as Task[]) : INITIAL_TASKS,
+    notes: Array.isArray(data.notes) ? (data.notes as Note[]) : INITIAL_NOTES,
+  };
+}
 
 export const StorageService = {
   /**
-   * Obtiene la lista de tareas del usuario (o seed data si es primera vez)
+   * Obtiene las tareas del usuario desde Firestore (o crea el documento
+   * con datos semilla si es su primer inicio de sesión)
    */
-  getTasks(uid: string): Task[] {
+  async getTasks(uid: string): Promise<Task[]> {
     try {
-      const stored = localStorage.getItem(scopedKey(TASKS_STORAGE_KEY, uid));
-      if (!stored) {
-        this.saveTasks(uid, INITIAL_TASKS);
-        return INITIAL_TASKS;
-      }
-      return JSON.parse(stored);
+      const data = await ensureUserDoc(uid);
+      return data.tasks;
     } catch (e) {
-      console.error('Error al leer tareas de localStorage:', e);
+      console.error('Error al leer tareas de Firestore:', e);
       return INITIAL_TASKS;
     }
   },
 
   /**
-   * Guarda la lista de tareas del usuario en localStorage
+   * Guarda las tareas del usuario en Firestore
    */
-  saveTasks(uid: string, tasks: Task[]): void {
+  async saveTasks(uid: string, tasks: Task[]): Promise<void> {
     try {
-      localStorage.setItem(scopedKey(TASKS_STORAGE_KEY, uid), JSON.stringify(tasks));
+      await setDoc(userDocRef(uid), { tasks }, { merge: true });
     } catch (e) {
-      console.error('Error al guardar tareas:', e);
+      console.error('Error al guardar tareas en Firestore:', e);
     }
   },
 
   /**
-   * Obtiene la lista de notas del usuario (o seed data si es primera vez)
+   * Obtiene las notas del usuario desde Firestore (o crea el documento
+   * con datos semilla si es su primer inicio de sesión)
    */
-  getNotes(uid: string): Note[] {
+  async getNotes(uid: string): Promise<Note[]> {
     try {
-      const stored = localStorage.getItem(scopedKey(NOTES_STORAGE_KEY, uid));
-      if (!stored) {
-        this.saveNotes(uid, INITIAL_NOTES);
-        return INITIAL_NOTES;
-      }
-      return JSON.parse(stored);
+      const data = await ensureUserDoc(uid);
+      return data.notes;
     } catch (e) {
-      console.error('Error al leer notas de localStorage:', e);
+      console.error('Error al leer notas de Firestore:', e);
       return INITIAL_NOTES;
     }
   },
 
   /**
-   * Guarda la lista de notas del usuario en localStorage
+   * Guarda las notas del usuario en Firestore
    */
-  saveNotes(uid: string, notes: Note[]): void {
+  async saveNotes(uid: string, notes: Note[]): Promise<void> {
     try {
-      localStorage.setItem(scopedKey(NOTES_STORAGE_KEY, uid), JSON.stringify(notes));
+      await setDoc(userDocRef(uid), { notes }, { merge: true });
     } catch (e) {
-      console.error('Error al guardar notas:', e);
+      console.error('Error al guardar notas en Firestore:', e);
     }
   },
 
   /**
-   * Obtiene el tema actual ('dark' | 'light') — es por dispositivo, no por usuario
+   * Obtiene el tema actual ('dark' | 'light') — sigue siendo por dispositivo,
+   * no tiene sentido guardarlo en la nube
    */
   getTheme(): 'dark' | 'light' {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === 'dark' || stored === 'light') return stored;
 
-    // Si no está guardado, detectar preferencia del sistema
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
-    return 'dark'; // Dark mode por defecto para wow factor
+    return 'dark';
   },
 
-  /**
-   * Guarda la preferencia de tema
-   */
   saveTheme(theme: 'dark' | 'light'): void {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   },
@@ -214,15 +231,16 @@ export const StorageService = {
   /**
    * Exporta todos los datos del usuario como archivo JSON descargable
    */
-  exportData(uid: string): void {
-    const data = {
-      tasks: this.getTasks(uid),
-      notes: this.getNotes(uid),
+  async exportData(uid: string): Promise<void> {
+    const data = await ensureUserDoc(uid);
+    const payload = {
+      tasks: data.tasks,
+      notes: data.notes,
       exportedAt: new Date().toISOString(),
       version: '1.0.0',
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -234,20 +252,22 @@ export const StorageService = {
   },
 
   /**
-   * Importa datos desde una cadena JSON hacia el espacio del usuario
+   * Importa datos desde una cadena JSON hacia el documento del usuario
    */
-  importData(uid: string, jsonString: string): boolean {
+  async importData(uid: string, jsonString: string): Promise<boolean> {
     try {
       const parsed = JSON.parse(jsonString);
-      if (Array.isArray(parsed.tasks)) {
-        this.saveTasks(uid, parsed.tasks);
-      }
-      if (Array.isArray(parsed.notes)) {
-        this.saveNotes(uid, parsed.notes);
-      }
+      const update: Partial<UserData> = {};
+
+      if (Array.isArray(parsed.tasks)) update.tasks = parsed.tasks;
+      if (Array.isArray(parsed.notes)) update.notes = parsed.notes;
+
+      if (!update.tasks && !update.notes) return false;
+
+      await setDoc(userDocRef(uid), update, { merge: true });
       return true;
     } catch (e) {
-      console.error('Error importando datos:', e);
+      console.error('Error importando datos a Firestore:', e);
       return false;
     }
   },
@@ -255,8 +275,7 @@ export const StorageService = {
   /**
    * Restablece los datos del usuario a las tareas y notas de demostración
    */
-  resetToDefaults(uid: string): void {
-    this.saveTasks(uid, INITIAL_TASKS);
-    this.saveNotes(uid, INITIAL_NOTES);
+  async resetToDefaults(uid: string): Promise<void> {
+    await setDoc(userDocRef(uid), { tasks: INITIAL_TASKS, notes: INITIAL_NOTES }, { merge: true });
   },
 };

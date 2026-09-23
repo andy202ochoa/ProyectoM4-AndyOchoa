@@ -1,21 +1,39 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Note, NoteColor } from '../types';
 import { StorageService } from '../services';
 import { generateId } from '../utils';
 
 export function useNotes(uid: string) {
-  const [notes, setNotes] = useState<Note[]>(() => StorageService.getNotes(uid));
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isInitialLoad = useRef(true);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<NoteColor | 'todos'>('todos');
 
-  // Si cambia el usuario logueado, recarga las notas de ESE usuario
+  // Cargar las notas del usuario desde Firestore (al montar o si cambia el uid)
   useEffect(() => {
-    setNotes(StorageService.getNotes(uid));
+    let cancelled = false;
+    isInitialLoad.current = true;
+    setLoading(true);
+
+    StorageService.getNotes(uid).then((data) => {
+      if (cancelled) return;
+      setNotes(data);
+      setLoading(false);
+      isInitialLoad.current = false;
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [uid]);
 
-  // Sincronizar automáticamente en localStorage
+  // Sincronizar automáticamente con Firestore cada vez que cambian las notas
+  // (se omite justo después de la carga inicial para no reescribir con lo mismo)
   useEffect(() => {
+    if (isInitialLoad.current) return;
     StorageService.saveNotes(uid, notes);
   }, [uid, notes]);
 
@@ -121,6 +139,7 @@ export function useNotes(uid: string) {
 
   return {
     notes,
+    loading,
     filteredNotes,
     pinnedNotes,
     otherNotes,

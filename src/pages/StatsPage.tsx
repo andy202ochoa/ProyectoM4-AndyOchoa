@@ -58,9 +58,13 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
   const priorities: TaskPriority[] = ['alta', 'media', 'baja'];
 
   // Manejo de exportación
-  const handleExport = () => {
-    StorageService.exportData(uid);
-    showNotification('¡Copia de seguridad descargada con éxito!');
+  const handleExport = async () => {
+    try {
+      await StorageService.exportData(uid);
+      showNotification('¡Copia de seguridad descargada con éxito!');
+    } catch {
+      showNotification('No se pudo generar la copia de seguridad.');
+    }
   };
 
   // Manejo de importación
@@ -68,11 +72,11 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
     const file = e.target.files?.[0];
     if (!file) return;
 
-  const reader = new FileReader();
-    reader.onload = (event) => {
+    const reader = new FileReader();
+    reader.onload = async (event) => {
       try {
         const content = event.target?.result as string;
-        const success = StorageService.importData(uid, content);
+        const success = await StorageService.importData(uid, content);
         if (success) {
           showNotification('¡Datos importados correctamente! Recargando vista...');
           setTimeout(() => window.location.reload(), 800);
@@ -87,14 +91,18 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
   };
 
   // Restablecer valores demo
-  const handleResetDefaults = () => {
+  const handleResetDefaults = async () => {
     const confirmed = window.confirm(
       '¿Deseas restablecer las tareas y notas de demostración? Esto reemplazará tus cambios actuales.'
     );
     if (confirmed) {
-      StorageService.resetToDefaults(uid);
-      showNotification('¡Datos de demostración restablecidos! Recargando...');
-      setTimeout(() => window.location.reload(), 600);
+      try {
+        await StorageService.resetToDefaults(uid);
+        showNotification('¡Datos de demostración restablecidos! Recargando...');
+        setTimeout(() => window.location.reload(), 600);
+      } catch {
+        showNotification('No se pudieron restablecer los datos. Inténtalo de nuevo.');
+      }
     }
   };
 

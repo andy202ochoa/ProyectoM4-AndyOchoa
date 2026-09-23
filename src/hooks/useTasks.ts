@@ -1,22 +1,40 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { PriorityFilter, SubTask, Task, TaskCategory, TaskFilter, TaskPriority, TaskStatus } from '../types';
 import { StorageService } from '../services';
 import { generateId, isOverdue } from '../utils';
 
 export function useTasks(uid: string) {
-  const [tasks, setTasks] = useState<Task[]>(() => StorageService.getTasks(uid));
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isInitialLoad = useRef(true);
+
   const [statusFilter, setStatusFilter] = useState<TaskFilter>('todas');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('todas');
   const [categoryFilter, setCategoryFilter] = useState<TaskCategory | 'todas'>('todas');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Si cambia el usuario logueado, recarga las tareas de ESE usuario
+  // Cargar las tareas del usuario desde Firestore (al montar o si cambia el uid)
   useEffect(() => {
-    setTasks(StorageService.getTasks(uid));
+    let cancelled = false;
+    isInitialLoad.current = true;
+    setLoading(true);
+
+    StorageService.getTasks(uid).then((data) => {
+      if (cancelled) return;
+      setTasks(data);
+      setLoading(false);
+      isInitialLoad.current = false;
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [uid]);
 
-  // Sincronizar automáticamente con localStorage
+  // Sincronizar automáticamente con Firestore cada vez que cambian las tareas
+  // (se omite justo después de la carga inicial para no reescribir con lo mismo)
   useEffect(() => {
+    if (isInitialLoad.current) return;
     StorageService.saveTasks(uid, tasks);
   }, [uid, tasks]);
 
@@ -241,6 +259,7 @@ export function useTasks(uid: string) {
 
   return {
     tasks,
+    loading,
     filteredTasks,
     statusFilter,
     setStatusFilter,
