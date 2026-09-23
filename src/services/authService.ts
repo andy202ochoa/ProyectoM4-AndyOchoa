@@ -2,6 +2,7 @@ import { auth } from "../services/firebase";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
+  sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
   UserCredential,
@@ -12,7 +13,9 @@ export const login = async (email: string, password: string): Promise<UserCreden
 };
 
 export const register = async (email: string, password: string): Promise<UserCredential> => {
-  return createUserWithEmailAndPassword(auth, email, password);
+  const credential = await createUserWithEmailAndPassword(auth, email, password);
+  await sendEmailVerification(credential.user);
+  return credential;
 };
 
 export const loginWithGoogle = async (): Promise<UserCredential> => {

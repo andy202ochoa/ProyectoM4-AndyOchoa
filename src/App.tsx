@@ -10,6 +10,7 @@ import { TaskModal } from './features/tasks';
 import { NoteModal } from './features/notes';
 import { LoginPage } from './pages/login';
 import { RegisterPage } from './pages/register';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 
 const tabToPath: Record<NavTab, string> = {
   tasks: '/tasks',
@@ -72,6 +73,12 @@ export default function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
+  }
+
+  // Usuario autenticado pero sin verificar su correo (aplica solo a email/password;
+  // los usuarios de Google llegan con emailVerified en true automáticamente)
+  if (!user.emailVerified) {
+    return <VerifyEmailPage user={user} />;
   }
   // --- Fin gate ---
 
