@@ -24,6 +24,8 @@ export const TasksPage: React.FC<TasksPageProps> = ({ taskHook }) => {
     addTask,
     updateTask,
     searchQuery,
+    loading,   // ✅ agregado
+    error      // ✅ agregado
   } = taskHook;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,12 +49,25 @@ export const TasksPage: React.FC<TasksPageProps> = ({ taskHook }) => {
     }
   };
 
+  // 🔥 LOADING
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+        <p>Cargando tareas...</p>
+      </div>
+    );
+  }
+
+  // 🔥 ERROR
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
   return (
     <div className="tasks-page">
       {/* Banner de Productividad Diario */}
-      <div
-        className="tasks-page-banner"
-      >
+      <div className="tasks-page-banner">
         <div>
           <div className="tasks-banner-kicker">
             <SparklesIcon size={14} />
@@ -64,7 +79,11 @@ export const TasksPage: React.FC<TasksPageProps> = ({ taskHook }) => {
               : `${counts.activas} tarea${counts.activas > 1 ? 's' : ''} pendiente${counts.activas > 1 ? 's' : ''}`}
           </h2>
           <p className="tasks-banner-subtitle">
-            {counts.completadas} de {counts.total} completadas ({counts.total > 0 ? Math.round((counts.completadas / counts.total) * 100) : 0}%)
+            {counts.completadas} de {counts.total} completadas (
+            {counts.total > 0
+              ? Math.round((counts.completadas / counts.total) * 100)
+              : 0}
+            %)
           </p>
         </div>
 
@@ -101,27 +120,27 @@ export const TasksPage: React.FC<TasksPageProps> = ({ taskHook }) => {
             />
           ))
         ) : (
-          <div
-            className="tasks-empty-state"
-          >
-            <div
-              className="tasks-empty-icon"
-            >
+          <div className="tasks-empty-state">
+            <div className="tasks-empty-icon">
               <CheckCircleIcon size={24} />
             </div>
             <h3 className="tasks-empty-title">
               {searchQuery
                 ? 'No hay tareas que coincidan con la búsqueda'
                 : statusFilter === 'completada'
-                  ? 'Aún no has completado tareas en esta vista'
-                  : 'No tienes tareas pendientes'}
+                ? 'Aún no has completado tareas en esta vista'
+                : 'No tienes tareas pendientes'}
             </h3>
             <p className="tasks-empty-description">
               {searchQuery
                 ? 'Intenta con otro término o limpia el buscador.'
                 : 'Crea una nueva tarea para mantener tu día productivo y organizado.'}
             </p>
-            <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleOpenCreate}
+            >
               <PlusIcon size={16} />
               <span>Crear nueva tarea</span>
             </button>

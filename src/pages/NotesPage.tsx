@@ -25,6 +25,8 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
     deleteNote,
     togglePinNote,
     totalNotesCount,
+    loading,   // ✅ agregado
+    error      // ✅ agregado
   } = noteHook;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,12 +53,25 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
   const colors = Object.keys(NOTE_COLOR_CONFIG) as NoteColor[];
   const hasNotes = pinnedNotes.length > 0 || otherNotes.length > 0;
 
+  // 🔥 LOADING
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+        <p>Cargando notas...</p>
+      </div>
+    );
+  }
+
+  // 🔥 ERROR
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
   return (
     <div className="notes-page">
       {/* Banner de Notas */}
-      <div
-        className="notes-page-banner"
-      >
+      <div className="notes-page-banner">
         <div>
           <div className="notes-banner-kicker">
             <NotesIcon size={14} />
@@ -80,11 +95,9 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
         </button>
       </div>
 
-      {/* Filtro deslizante por Etiquetas */}
+      {/* Filtro por etiquetas */}
       {allTags.length > 0 && (
-        <div
-          className="notes-tag-filter"
-        >
+        <div className="notes-tag-filter">
           <button
             type="button"
             onClick={() => setSelectedTag(null)}
@@ -92,6 +105,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
           >
             Todas
           </button>
+
           {allTags.map((tag) => {
             const isSelected = selectedTag === tag;
             return (
@@ -109,10 +123,8 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
         </div>
       )}
 
-      {/* Filtro por Paleta de Color */}
-      <div
-        className="notes-color-filter"
-      >
+      {/* Filtro por color */}
+      <div className="notes-color-filter">
         <button
           type="button"
           onClick={() => setSelectedColor('todos')}
@@ -120,9 +132,11 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
         >
           Colores:
         </button>
+
         {colors.map((c) => {
           const conf = NOTE_COLOR_CONFIG[c];
           const isSelected = selectedColor === c;
+
           return (
             <button
               key={c}
@@ -135,21 +149,17 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
         })}
       </div>
 
-      {/* Listado de Notas */}
+      {/* Listado */}
       <div className="notes-list">
-        {/* Sección de Notas Fijadas */}
+        {/* Fijadas */}
         {pinnedNotes.length > 0 && (
           <div>
-            <div
-              className="notes-section-title"
-            >
+            <div className="notes-section-title">
               <PinIcon size={14} filled />
               <span>Fijadas ({pinnedNotes.length})</span>
             </div>
 
-            <div
-              className="notes-grid"
-            >
+            <div className="notes-grid">
               {pinnedNotes.map((note) => (
                 <NoteCard
                   key={note.id}
@@ -164,20 +174,16 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
           </div>
         )}
 
-        {/* Sección de Otras Notas */}
+        {/* Otras */}
         {otherNotes.length > 0 && (
           <div>
             {pinnedNotes.length > 0 && (
-              <div
-                className="notes-section-title is-secondary"
-              >
+              <div className="notes-section-title is-secondary">
                 Otras notas ({otherNotes.length})
               </div>
             )}
 
-            <div
-              className="notes-grid"
-            >
+            <div className="notes-grid">
               {otherNotes.map((note) => (
                 <NoteCard
                   key={note.id}
@@ -192,27 +198,30 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
           </div>
         )}
 
-        {/* Estado Vacío */}
+        {/* Estado vacío */}
         {!hasNotes && (
-          <div
-            className="notes-empty-state"
-          >
-            <div
-              className="notes-empty-icon"
-            >
+          <div className="notes-empty-state">
+            <div className="notes-empty-icon">
               <NotesIcon size={24} />
             </div>
+
             <h3 className="notes-empty-title">
               {searchQuery || selectedTag || selectedColor !== 'todos'
                 ? 'No hay notas con estos filtros'
                 : 'Tu bloc de notas está vacío'}
             </h3>
+
             <p className="notes-empty-description">
               {searchQuery || selectedTag || selectedColor !== 'todos'
                 ? 'Prueba limpiando los filtros o realizando otra búsqueda.'
                 : 'Guarda pensamientos rápidos, enlaces, fragmentos de código o listas de ideas.'}
             </p>
-            <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
+
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleOpenCreate}
+            >
               <PlusIcon size={16} />
               <span>Crear primera nota</span>
             </button>
@@ -220,7 +229,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ noteHook }) => {
         )}
       </div>
 
-      {/* Modal para Crear/Editar Nota */}
+      {/* Modal */}
       <NoteModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
