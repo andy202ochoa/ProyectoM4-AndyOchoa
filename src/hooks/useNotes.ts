@@ -6,36 +6,52 @@ import { generateId } from '../utils';
 export function useNotes(uid: string) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const notesRef = useRef<Note[]>([]);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<NoteColor | 'todos'>('todos');
 
-  // Mantener una referencia siempre actualizada para leer el estado
-  // actual dentro de callbacks sin depender de closures viejas
   useEffect(() => {
     notesRef.current = notes;
   }, [notes]);
 
-  // Cargar las notas del usuario (filtradas por userId) al montar o si cambia el uid
+  // 🔥 CARGA INICIAL CON MANEJO DE ERRORES
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
-    StorageService.getNotes(uid).then((data) => {
-      if (cancelled) return;
-      setNotes(data);
-      setLoading(false);
-    });
+    const loadNotes = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await StorageService.getNotes(uid);
+
+        if (!cancelled) {
+          setNotes(data);
+        }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) {
+          setError('No se pudieron cargar las notas');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadNotes();
 
     return () => {
       cancelled = true;
     };
   }, [uid]);
 
-  // Agregar una nota
-  const addNote = useCallback((noteData: {
+  // 🔥 ADD CON ROLLBACK
+  const addNote = useCallback(async (noteData: {
     title: string;
     content: string;
     color: NoteColor;
@@ -54,12 +70,26 @@ export function useNotes(uid: string) {
     };
 
     setNotes((prev) => [newNote, ...prev]);
-    StorageService.upsertNote(uid, newNote);
-    return newNote;
+
+    try {
+      await StorageService.upsertNote(uid, newNote);
+      return newNote;
+    } catch (err) {
+      console.error(err);
+
+      // rollback
+      setNotes((prev) => prev.filter((n) => n.id !== newNote.id));
+      setError('No se pudo guardar la nota');
+
+      throw err;
+    }
   }, [uid]);
 
-  // Actualizar una nota
-  const updateNote = useCallback((id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => {
+  // 🔥 UPDATE CON ROLLBACK
+  const updateNote = useCallback(async (
+    id: string,
+    updates: Partial<Omit<Note, 'id' | 'createdAt'>>
+  ) => {
     const current = notesRef.current.find((n) => n.id === id);
     if (!current) return;
 
@@ -69,18 +99,40 @@ export function useNotes(uid: string) {
       updatedAt: new Date().toISOString(),
     };
 
+    const previous = current;
+
     setNotes((prev) => prev.map((n) => (n.id === id ? updatedNote : n)));
-    StorageService.upsertNote(uid, updatedNote);
+
+    try {
+      await StorageService.upsertNote(uid, updatedNote);
+    } catch (err) {
+      console.error(err);
+
+      // rollback
+      setNotes((prev) => prev.map((n) => (n.id === id ? previous : n)));
+      setError('No se pudo actualizar la nota');
+    }
   }, [uid]);
 
-  // Eliminar una nota
-  const deleteNote = useCallback((id: string) => {
+  // 🔥 DELETE CON ROLLBACK
+  const deleteNote = useCallback(async (id: string) => {
+    const previous = notesRef.current;
+
     setNotes((prev) => prev.filter((n) => n.id !== id));
-    StorageService.removeNote(id);
+
+    try {
+      await StorageService.removeNote(id);
+    } catch (err) {
+      console.error(err);
+
+      // rollback
+      setNotes(previous);
+      setError('No se pudo eliminar la nota');
+    }
   }, []);
 
-  // Alternar fijado de nota (Pin / Unpin)
-  const togglePinNote = useCallback((id: string) => {
+  // 🔥 TOGGLE PIN CON ROLLBACK
+  const togglePinNote = useCallback(async (id: string) => {
     const current = notesRef.current.find((n) => n.id === id);
     if (!current) return;
 
@@ -90,18 +142,29 @@ export function useNotes(uid: string) {
       updatedAt: new Date().toISOString(),
     };
 
+    const previous = current;
+
     setNotes((prev) => prev.map((n) => (n.id === id ? updatedNote : n)));
-    StorageService.upsertNote(uid, updatedNote);
+
+    try {
+      await StorageService.upsertNote(uid, updatedNote);
+    } catch (err) {
+      console.error(err);
+
+      // rollback
+      setNotes((prev) => prev.map((n) => (n.id === id ? previous : n)));
+      setError('No se pudo actualizar la nota');
+    }
   }, [uid]);
 
-  // Extraer todas las etiquetas únicas existentes
+  // 🔹 TAGS
   const allTags = useMemo(() => {
     const tagsSet = new Set<string>();
     notes.forEach((n) => n.tags.forEach((t) => tagsSet.add(t)));
     return Array.from(tagsSet);
   }, [notes]);
 
-  // Notas filtradas por búsqueda, etiqueta y color
+  // 🔹 FILTROS
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
       if (selectedColor !== 'todos' && note.color !== selectedColor) return false;
@@ -119,7 +182,6 @@ export function useNotes(uid: string) {
     });
   }, [notes, selectedColor, selectedTag, searchQuery]);
 
-  // Dividir en notas fijadas y resto de notas ordenadas por fecha reciente
   const pinnedNotes = useMemo(() => {
     return filteredNotes
       .filter((n) => n.isPinned)
@@ -135,6 +197,7 @@ export function useNotes(uid: string) {
   return {
     notes,
     loading,
+    error,
     filteredNotes,
     pinnedNotes,
     otherNotes,

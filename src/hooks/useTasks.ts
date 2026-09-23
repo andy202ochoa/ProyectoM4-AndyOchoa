@@ -6,6 +6,7 @@ import { generateId, isOverdue } from '../utils';
 export function useTasks(uid: string) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const tasksRef = useRef<Task[]>([]);
 
   const [statusFilter, setStatusFilter] = useState<TaskFilter>('todas');
@@ -13,30 +14,45 @@ export function useTasks(uid: string) {
   const [categoryFilter, setCategoryFilter] = useState<TaskCategory | 'todas'>('todas');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Mantener una referencia siempre actualizada para leer el estado
-  // actual dentro de callbacks sin depender de closures viejas
   useEffect(() => {
     tasksRef.current = tasks;
   }, [tasks]);
 
-  // Cargar las tareas del usuario (filtradas por userId) al montar o si cambia el uid
+  // 🔥 CARGA INICIAL CON MANEJO DE ERRORES
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
-    StorageService.getTasks(uid).then((data) => {
-      if (cancelled) return;
-      setTasks(data);
-      setLoading(false);
-    });
+    const loadTasks = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await StorageService.getTasks(uid);
+
+        if (!cancelled) {
+          setTasks(data);
+        }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) {
+          setError('No se pudieron cargar las tareas');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadTasks();
 
     return () => {
       cancelled = true;
     };
   }, [uid]);
 
-  // Agregar una nueva tarea
-  const addTask = useCallback((taskData: {
+  // 🔥 ADD CON ROLLBACK
+  const addTask = useCallback(async (taskData: {
     title: string;
     description?: string;
     priority: TaskPriority;
@@ -62,13 +78,24 @@ export function useTasks(uid: string) {
     };
 
     setTasks((prev) => [newTask, ...prev]);
-    StorageService.upsertTask(uid, newTask);
-    return newTask;
+
+    try {
+      await StorageService.upsertTask(uid, newTask);
+      return newTask;
+    } catch (err) {
+      console.error(err);
+
+      // rollback
+      setTasks((prev) => prev.filter((t) => t.id !== newTask.id));
+      setError('No se pudo guardar la tarea');
+
+      throw err;
+    }
   }, [uid]);
 
-  // Actualizar una tarea existente
+  // 🔥 UPDATE CON ROLLBACK
   const updateTask = useCallback(
-    (
+    async (
       id: string,
       updates: {
         title?: string;
@@ -85,10 +112,10 @@ export function useTasks(uid: string) {
 
       const updatedSubtasks: SubTask[] = updates.subtasks
         ? updates.subtasks.map((st) => ({
-          id: st.id || generateId(),
-          title: st.title.trim(),
-          completed: st.completed || false,
-        }))
+            id: st.id || generateId(),
+            title: st.title.trim(),
+            completed: st.completed || false,
+          }))
         : current.subtasks;
 
       const updatedTask: Task = {
@@ -98,20 +125,41 @@ export function useTasks(uid: string) {
         updatedAt: new Date().toISOString(),
       };
 
+      const previous = current;
+
       setTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)));
-      StorageService.upsertTask(uid, updatedTask);
+
+      try {
+        await StorageService.upsertTask(uid, updatedTask);
+      } catch (err) {
+        console.error(err);
+
+        // rollback
+        setTasks((prev) => prev.map((t) => (t.id === id ? previous : t)));
+        setError('No se pudo actualizar la tarea');
+      }
     },
     [uid]
   );
 
-  // Eliminar una tarea
-  const deleteTask = useCallback((id: string) => {
+  // 🔥 DELETE CON ROLLBACK
+  const deleteTask = useCallback(async (id: string) => {
+    const previous = tasksRef.current;
+
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    StorageService.removeTask(id);
+
+    try {
+      await StorageService.removeTask(id);
+    } catch (err) {
+      console.error(err);
+
+      // rollback
+      setTasks(previous);
+      setError('No se pudo eliminar la tarea');
+    }
   }, []);
 
-  // Alternar estado de la tarea (Pendiente <-> Completada o En Progreso)
-  const toggleTaskStatus = useCallback((id: string) => {
+  const toggleTaskStatus = useCallback(async (id: string) => {
     const current = tasksRef.current.find((t) => t.id === id);
     if (!current) return;
 
@@ -128,12 +176,20 @@ export function useTasks(uid: string) {
       updatedAt: new Date().toISOString(),
     };
 
+    const previous = current;
+
     setTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)));
-    StorageService.upsertTask(uid, updatedTask);
+
+    try {
+      await StorageService.upsertTask(uid, updatedTask);
+    } catch (err) {
+      console.error(err);
+      setTasks((prev) => prev.map((t) => (t.id === id ? previous : t)));
+      setError('No se pudo actualizar el estado');
+    }
   }, [uid]);
 
-  // Alternar estado de una subtarea
-  const toggleSubTask = useCallback((taskId: string, subTaskId: string) => {
+  const toggleSubTask = useCallback(async (taskId: string, subTaskId: string) => {
     const current = tasksRef.current.find((t) => t.id === taskId);
     if (!current) return;
 
@@ -145,8 +201,8 @@ export function useTasks(uid: string) {
     const newStatus: TaskStatus = allCompleted
       ? 'completada'
       : current.status === 'completada'
-        ? 'en_progreso'
-        : current.status;
+      ? 'en_progreso'
+      : current.status;
 
     const updatedTask: Task = {
       ...current,
@@ -155,13 +211,22 @@ export function useTasks(uid: string) {
       updatedAt: new Date().toISOString(),
     };
 
+    const previous = current;
+
     setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
-    StorageService.upsertTask(uid, updatedTask);
+
+    try {
+      await StorageService.upsertTask(uid, updatedTask);
+    } catch (err) {
+      console.error(err);
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? previous : t)));
+      setError('No se pudo actualizar la subtarea');
+    }
   }, [uid]);
 
-  // Agregar subtarea directamente
-  const addSubTask = useCallback((taskId: string, title: string) => {
+  const addSubTask = useCallback(async (taskId: string, title: string) => {
     if (!title.trim()) return;
+
     const current = tasksRef.current.find((t) => t.id === taskId);
     if (!current) return;
 
@@ -178,12 +243,20 @@ export function useTasks(uid: string) {
       updatedAt: new Date().toISOString(),
     };
 
+    const previous = current;
+
     setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
-    StorageService.upsertTask(uid, updatedTask);
+
+    try {
+      await StorageService.upsertTask(uid, updatedTask);
+    } catch (err) {
+      console.error(err);
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? previous : t)));
+      setError('No se pudo agregar la subtarea');
+    }
   }, [uid]);
 
-  // Eliminar subtarea
-  const removeSubTask = useCallback((taskId: string, subTaskId: string) => {
+  const removeSubTask = useCallback(async (taskId: string, subTaskId: string) => {
     const current = tasksRef.current.find((t) => t.id === taskId);
     if (!current) return;
 
@@ -193,11 +266,19 @@ export function useTasks(uid: string) {
       updatedAt: new Date().toISOString(),
     };
 
+    const previous = current;
+
     setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
-    StorageService.upsertTask(uid, updatedTask);
+
+    try {
+      await StorageService.upsertTask(uid, updatedTask);
+    } catch (err) {
+      console.error(err);
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? previous : t)));
+      setError('No se pudo eliminar la subtarea');
+    }
   }, [uid]);
 
-  // Tareas filtradas y ordenadas inteligentemente
   const filteredTasks = useMemo(() => {
     return tasks
       .filter((task) => {
@@ -239,7 +320,6 @@ export function useTasks(uid: string) {
       });
   }, [tasks, statusFilter, priorityFilter, categoryFilter, searchQuery]);
 
-  // Conteos útiles para la interfaz
   const counts = useMemo(() => {
     return {
       total: tasks.length,
@@ -253,6 +333,7 @@ export function useTasks(uid: string) {
   return {
     tasks,
     loading,
+    error,
     filteredTasks,
     statusFilter,
     setStatusFilter,
