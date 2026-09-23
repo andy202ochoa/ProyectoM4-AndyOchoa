@@ -6,37 +6,34 @@ import { generateId, isOverdue } from '../utils';
 export function useTasks(uid: string) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const isInitialLoad = useRef(true);
+  const tasksRef = useRef<Task[]>([]);
 
   const [statusFilter, setStatusFilter] = useState<TaskFilter>('todas');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('todas');
   const [categoryFilter, setCategoryFilter] = useState<TaskCategory | 'todas'>('todas');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Cargar las tareas del usuario desde Firestore (al montar o si cambia el uid)
+  // Mantener una referencia siempre actualizada para leer el estado
+  // actual dentro de callbacks sin depender de closures viejas
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
+
+  // Cargar las tareas del usuario (filtradas por userId) al montar o si cambia el uid
   useEffect(() => {
     let cancelled = false;
-    isInitialLoad.current = true;
     setLoading(true);
 
     StorageService.getTasks(uid).then((data) => {
       if (cancelled) return;
       setTasks(data);
       setLoading(false);
-      isInitialLoad.current = false;
     });
 
     return () => {
       cancelled = true;
     };
   }, [uid]);
-
-  // Sincronizar automáticamente con Firestore cada vez que cambian las tareas
-  // (se omite justo después de la carga inicial para no reescribir con lo mismo)
-  useEffect(() => {
-    if (isInitialLoad.current) return;
-    StorageService.saveTasks(uid, tasks);
-  }, [uid, tasks]);
 
   // Agregar una nueva tarea
   const addTask = useCallback((taskData: {
@@ -65,8 +62,9 @@ export function useTasks(uid: string) {
     };
 
     setTasks((prev) => [newTask, ...prev]);
+    StorageService.upsertTask(uid, newTask);
     return newTask;
-  }, []);
+  }, [uid]);
 
   // Actualizar una tarea existente
   const updateTask = useCallback(
@@ -82,131 +80,131 @@ export function useTasks(uid: string) {
         subtasks?: { id?: string; title: string; completed: boolean }[];
       }
     ) => {
-      setTasks((prev) =>
-        prev.map((t) => {
-          if (t.id !== id) return t;
-          const updatedSubtasks: SubTask[] = updates.subtasks
-            ? updates.subtasks.map((st) => ({
-              id: st.id || generateId(),
-              title: st.title.trim(),
-              completed: st.completed || false,
-            }))
-            : t.subtasks;
+      const current = tasksRef.current.find((t) => t.id === id);
+      if (!current) return;
 
-          return {
-            ...t,
-            ...updates,
-            subtasks: updatedSubtasks,
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      );
+      const updatedSubtasks: SubTask[] = updates.subtasks
+        ? updates.subtasks.map((st) => ({
+          id: st.id || generateId(),
+          title: st.title.trim(),
+          completed: st.completed || false,
+        }))
+        : current.subtasks;
+
+      const updatedTask: Task = {
+        ...current,
+        ...updates,
+        subtasks: updatedSubtasks,
+        updatedAt: new Date().toISOString(),
+      };
+
+      setTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)));
+      StorageService.upsertTask(uid, updatedTask);
     },
-    []
+    [uid]
   );
 
   // Eliminar una tarea
   const deleteTask = useCallback((id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
+    StorageService.removeTask(id);
   }, []);
 
   // Alternar estado de la tarea (Pendiente <-> Completada o En Progreso)
   const toggleTaskStatus = useCallback((id: string) => {
-    setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id !== id) return t;
-        const newStatus: TaskStatus = t.status === 'completada' ? 'pendiente' : 'completada';
-        // Si se completa la tarea, marcar también todas sus subtareas como completadas
-        const updatedSubtasks =
-          newStatus === 'completada'
-            ? t.subtasks.map((st) => ({ ...st, completed: true }))
-            : t.subtasks;
+    const current = tasksRef.current.find((t) => t.id === id);
+    if (!current) return;
 
-        return {
-          ...t,
-          status: newStatus,
-          subtasks: updatedSubtasks,
-          updatedAt: new Date().toISOString(),
-        };
-      })
-    );
-  }, []);
+    const newStatus: TaskStatus = current.status === 'completada' ? 'pendiente' : 'completada';
+    const updatedSubtasks =
+      newStatus === 'completada'
+        ? current.subtasks.map((st) => ({ ...st, completed: true }))
+        : current.subtasks;
+
+    const updatedTask: Task = {
+      ...current,
+      status: newStatus,
+      subtasks: updatedSubtasks,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)));
+    StorageService.upsertTask(uid, updatedTask);
+  }, [uid]);
 
   // Alternar estado de una subtarea
   const toggleSubTask = useCallback((taskId: string, subTaskId: string) => {
-    setTasks((prev) =>
-      prev.map((task) => {
-        if (task.id !== taskId) return task;
+    const current = tasksRef.current.find((t) => t.id === taskId);
+    if (!current) return;
 
-        const updatedSubtasks = task.subtasks.map((st) =>
-          st.id === subTaskId ? { ...st, completed: !st.completed } : st
-        );
-
-        // Si todas las subtareas están completadas, podemos sugerir o actualizar el estado
-        const allCompleted = updatedSubtasks.length > 0 && updatedSubtasks.every((st) => st.completed);
-        const newStatus: TaskStatus = allCompleted ? 'completada' : task.status === 'completada' ? 'en_progreso' : task.status;
-
-        return {
-          ...task,
-          subtasks: updatedSubtasks,
-          status: newStatus,
-          updatedAt: new Date().toISOString(),
-        };
-      })
+    const updatedSubtasks = current.subtasks.map((st) =>
+      st.id === subTaskId ? { ...st, completed: !st.completed } : st
     );
-  }, []);
+
+    const allCompleted = updatedSubtasks.length > 0 && updatedSubtasks.every((st) => st.completed);
+    const newStatus: TaskStatus = allCompleted
+      ? 'completada'
+      : current.status === 'completada'
+        ? 'en_progreso'
+        : current.status;
+
+    const updatedTask: Task = {
+      ...current,
+      subtasks: updatedSubtasks,
+      status: newStatus,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
+    StorageService.upsertTask(uid, updatedTask);
+  }, [uid]);
 
   // Agregar subtarea directamente
   const addSubTask = useCallback((taskId: string, title: string) => {
     if (!title.trim()) return;
+    const current = tasksRef.current.find((t) => t.id === taskId);
+    if (!current) return;
+
     const newSub: SubTask = {
       id: generateId(),
       title: title.trim(),
       completed: false,
     };
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? {
-            ...t,
-            subtasks: [...t.subtasks, newSub],
-            status: t.status === 'completada' ? 'en_progreso' : t.status,
-            updatedAt: new Date().toISOString(),
-          }
-          : t
-      )
-    );
-  }, []);
+
+    const updatedTask: Task = {
+      ...current,
+      subtasks: [...current.subtasks, newSub],
+      status: current.status === 'completada' ? 'en_progreso' : current.status,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
+    StorageService.upsertTask(uid, updatedTask);
+  }, [uid]);
 
   // Eliminar subtarea
   const removeSubTask = useCallback((taskId: string, subTaskId: string) => {
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? {
-            ...t,
-            subtasks: t.subtasks.filter((st) => st.id !== subTaskId),
-            updatedAt: new Date().toISOString(),
-          }
-          : t
-      )
-    );
-  }, []);
+    const current = tasksRef.current.find((t) => t.id === taskId);
+    if (!current) return;
+
+    const updatedTask: Task = {
+      ...current,
+      subtasks: current.subtasks.filter((st) => st.id !== subTaskId),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
+    StorageService.upsertTask(uid, updatedTask);
+  }, [uid]);
 
   // Tareas filtradas y ordenadas inteligentemente
   const filteredTasks = useMemo(() => {
     return tasks
       .filter((task) => {
-        // Filtro de estado
         if (statusFilter !== 'todas' && task.status !== statusFilter) return false;
-
-        // Filtro de prioridad
         if (priorityFilter !== 'todas' && task.priority !== priorityFilter) return false;
-
-        // Filtro de categoría
         if (categoryFilter !== 'todas' && task.category !== categoryFilter) return false;
 
-        // Filtro de búsqueda
         if (searchQuery.trim()) {
           const query = searchQuery.toLowerCase();
           const matchTitle = task.title.toLowerCase().includes(query);
@@ -218,30 +216,25 @@ export function useTasks(uid: string) {
         return true;
       })
       .sort((a, b) => {
-        // 1. Tareas completadas siempre al final
         if (a.status === 'completada' && b.status !== 'completada') return 1;
         if (a.status !== 'completada' && b.status === 'completada') return -1;
 
-        // 2. Tareas vencidas primero para llamar la atención
         const aOverdue = isOverdue(a.dueDate, a.status);
         const bOverdue = isOverdue(b.dueDate, b.status);
         if (aOverdue && !bOverdue) return -1;
         if (!aOverdue && bOverdue) return 1;
 
-        // 3. Prioridad (alta > media > baja)
         const priorityWeight = { alta: 3, media: 2, baja: 1 };
         if (priorityWeight[a.priority] !== priorityWeight[b.priority]) {
           return priorityWeight[b.priority] - priorityWeight[a.priority];
         }
 
-        // 4. Fecha de vencimiento más cercana
         if (a.dueDate && b.dueDate) {
           return a.dueDate.localeCompare(b.dueDate);
         }
         if (a.dueDate && !b.dueDate) return -1;
         if (!a.dueDate && b.dueDate) return 1;
 
-        // 5. Creación más reciente
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
   }, [tasks, statusFilter, priorityFilter, categoryFilter, searchQuery]);

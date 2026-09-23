@@ -1,9 +1,18 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  writeBatch,
+} from 'firebase/firestore';
 import { db } from './firebase';
 import { Note, Task } from '../types';
 import { getTodayDateString } from '../utils/dateUtils';
 
-// Generar fechas de muestra relativas
 const today = getTodayDateString();
 const tomorrowDate = new Date();
 tomorrowDate.setDate(tomorrowDate.getDate() + 1);
@@ -130,94 +139,137 @@ export const INITIAL_NOTES: Note[] = [
 
 const THEME_STORAGE_KEY = 'taskflow_theme_v1';
 
-interface UserData {
-  tasks: Task[];
-  notes: Note[];
-}
-
-// Referencia al documento único del usuario en Firestore
-const userDocRef = (uid: string) => doc(db, 'userData', uid);
-
-/**
- * Lee el documento del usuario. Si no existe todavía (primer login),
- * lo crea con los datos semilla y los retorna.
- */
-async function ensureUserDoc(uid: string): Promise<UserData> {
-  const ref = userDocRef(uid);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    const seed: UserData = { tasks: INITIAL_TASKS, notes: INITIAL_NOTES };
-    await setDoc(ref, seed);
-    return seed;
-  }
-
-  const data = snap.data();
-  return {
-    tasks: Array.isArray(data.tasks) ? (data.tasks as Task[]) : INITIAL_TASKS,
-    notes: Array.isArray(data.notes) ? (data.notes as Note[]) : INITIAL_NOTES,
-  };
-}
+const TASKS_COLLECTION = 'tasks';
+const NOTES_COLLECTION = 'notes';
 
 export const StorageService = {
   /**
-   * Obtiene las tareas del usuario desde Firestore (o crea el documento
-   * con datos semilla si es su primer inicio de sesión)
+   * Obtiene SOLO las tareas cuyo campo userId coincide con el uid dado
    */
   async getTasks(uid: string): Promise<Task[]> {
     try {
-      const data = await ensureUserDoc(uid);
-      return data.tasks;
+      const q = query(collection(db, TASKS_COLLECTION), where('userId', '==', uid));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        // Primera vez del usuario: sembramos sus tareas de demostración
+        const batch = writeBatch(db);
+        INITIAL_TASKS.forEach((task) => {
+          batch.set(doc(db, TASKS_COLLECTION, task.id), { ...task, userId: uid });
+        });
+        await batch.commit();
+        return INITIAL_TASKS;
+      }
+
+      return snapshot.docs.map((d) => {
+        const { userId, ...task } = d.data() as Task & { userId: string };
+        return task as Task;
+      });
     } catch (e) {
       console.error('Error al leer tareas de Firestore:', e);
-      return INITIAL_TASKS;
+      return [];
     }
   },
 
   /**
-   * Guarda las tareas del usuario en Firestore
+   * Crea o sobrescribe una tarea individual, con userId para el filtrado
    */
-  async saveTasks(uid: string, tasks: Task[]): Promise<void> {
+  async upsertTask(uid: string, task: Task): Promise<void> {
     try {
-      await setDoc(userDocRef(uid), { tasks }, { merge: true });
+      await setDoc(doc(db, TASKS_COLLECTION, task.id), { ...task, userId: uid });
     } catch (e) {
-      console.error('Error al guardar tareas en Firestore:', e);
+      console.error('Error al guardar la tarea en Firestore:', e);
     }
   },
 
   /**
-   * Obtiene las notas del usuario desde Firestore (o crea el documento
-   * con datos semilla si es su primer inicio de sesión)
+   * Actualiza campos puntuales de una tarea existente
+   */
+  async patchTask(taskId: string, updates: Partial<Task>): Promise<void> {
+    try {
+      await updateDoc(doc(db, TASKS_COLLECTION, taskId), updates);
+    } catch (e) {
+      console.error('Error al actualizar la tarea en Firestore:', e);
+    }
+  },
+
+  /**
+   * Elimina una tarea por su id
+   */
+  async removeTask(taskId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, TASKS_COLLECTION, taskId));
+    } catch (e) {
+      console.error('Error al eliminar la tarea en Firestore:', e);
+    }
+  },
+
+  /**
+   * Obtiene SOLO las notas cuyo campo userId coincide con el uid dado
    */
   async getNotes(uid: string): Promise<Note[]> {
     try {
-      const data = await ensureUserDoc(uid);
-      return data.notes;
+      const q = query(collection(db, NOTES_COLLECTION), where('userId', '==', uid));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        const batch = writeBatch(db);
+        INITIAL_NOTES.forEach((note) => {
+          batch.set(doc(db, NOTES_COLLECTION, note.id), { ...note, userId: uid });
+        });
+        await batch.commit();
+        return INITIAL_NOTES;
+      }
+
+      return snapshot.docs.map((d) => {
+        const { userId, ...note } = d.data() as Note & { userId: string };
+        return note as Note;
+      });
     } catch (e) {
       console.error('Error al leer notas de Firestore:', e);
-      return INITIAL_NOTES;
+      return [];
     }
   },
 
   /**
-   * Guarda las notas del usuario en Firestore
+   * Crea o sobrescribe una nota individual, con userId para el filtrado
    */
-  async saveNotes(uid: string, notes: Note[]): Promise<void> {
+  async upsertNote(uid: string, note: Note): Promise<void> {
     try {
-      await setDoc(userDocRef(uid), { notes }, { merge: true });
+      await setDoc(doc(db, NOTES_COLLECTION, note.id), { ...note, userId: uid });
     } catch (e) {
-      console.error('Error al guardar notas en Firestore:', e);
+      console.error('Error al guardar la nota en Firestore:', e);
     }
   },
 
   /**
-   * Obtiene el tema actual ('dark' | 'light') — sigue siendo por dispositivo,
-   * no tiene sentido guardarlo en la nube
+   * Actualiza campos puntuales de una nota existente
+   */
+  async patchNote(noteId: string, updates: Partial<Note>): Promise<void> {
+    try {
+      await updateDoc(doc(db, NOTES_COLLECTION, noteId), updates);
+    } catch (e) {
+      console.error('Error al actualizar la nota en Firestore:', e);
+    }
+  },
+
+  /**
+   * Elimina una nota por su id
+   */
+  async removeNote(noteId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, NOTES_COLLECTION, noteId));
+    } catch (e) {
+      console.error('Error al eliminar la nota en Firestore:', e);
+    }
+  },
+
+  /**
+   * Tema visual — sigue siendo por dispositivo, no por usuario
    */
   getTheme(): 'dark' | 'light' {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === 'dark' || stored === 'light') return stored;
-
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
@@ -229,13 +281,13 @@ export const StorageService = {
   },
 
   /**
-   * Exporta todos los datos del usuario como archivo JSON descargable
+   * Exporta todas las tareas y notas del usuario (filtradas por userId) a un JSON descargable
    */
   async exportData(uid: string): Promise<void> {
-    const data = await ensureUserDoc(uid);
+    const [tasks, notes] = await Promise.all([this.getTasks(uid), this.getNotes(uid)]);
     const payload = {
-      tasks: data.tasks,
-      notes: data.notes,
+      tasks,
+      notes,
       exportedAt: new Date().toISOString(),
       version: '1.0.0',
     };
@@ -252,19 +304,31 @@ export const StorageService = {
   },
 
   /**
-   * Importa datos desde una cadena JSON hacia el documento del usuario
+   * Importa un respaldo JSON, sobrescribiendo (o creando) las tareas/notas del usuario
    */
   async importData(uid: string, jsonString: string): Promise<boolean> {
     try {
       const parsed = JSON.parse(jsonString);
-      const update: Partial<UserData> = {};
+      const batch = writeBatch(db);
+      let hasData = false;
 
-      if (Array.isArray(parsed.tasks)) update.tasks = parsed.tasks;
-      if (Array.isArray(parsed.notes)) update.notes = parsed.notes;
+      if (Array.isArray(parsed.tasks)) {
+        parsed.tasks.forEach((task: Task) => {
+          batch.set(doc(db, TASKS_COLLECTION, task.id), { ...task, userId: uid });
+        });
+        hasData = true;
+      }
 
-      if (!update.tasks && !update.notes) return false;
+      if (Array.isArray(parsed.notes)) {
+        parsed.notes.forEach((note: Note) => {
+          batch.set(doc(db, NOTES_COLLECTION, note.id), { ...note, userId: uid });
+        });
+        hasData = true;
+      }
 
-      await setDoc(userDocRef(uid), update, { merge: true });
+      if (!hasData) return false;
+
+      await batch.commit();
       return true;
     } catch (e) {
       console.error('Error importando datos a Firestore:', e);
@@ -273,9 +337,25 @@ export const StorageService = {
   },
 
   /**
-   * Restablece los datos del usuario a las tareas y notas de demostración
+   * Borra las tareas/notas actuales del usuario y las reemplaza por los datos de demostración
    */
   async resetToDefaults(uid: string): Promise<void> {
-    await setDoc(userDocRef(uid), { tasks: INITIAL_TASKS, notes: INITIAL_NOTES }, { merge: true });
+    const [existingTasks, existingNotes] = await Promise.all([this.getTasks(uid), this.getNotes(uid)]);
+
+    const batch = writeBatch(db);
+
+    // Nota: getTasks/getNotes ya habrían sembrado datos si el usuario no tenía nada,
+    // así que aquí simplemente forzamos que su colección quede igual a los datos semilla.
+    existingTasks.forEach((t) => batch.delete(doc(db, TASKS_COLLECTION, t.id)));
+    existingNotes.forEach((n) => batch.delete(doc(db, NOTES_COLLECTION, n.id)));
+
+    INITIAL_TASKS.forEach((task) => {
+      batch.set(doc(db, TASKS_COLLECTION, task.id), { ...task, userId: uid });
+    });
+    INITIAL_NOTES.forEach((note) => {
+      batch.set(doc(db, NOTES_COLLECTION, note.id), { ...note, userId: uid });
+    });
+
+    await batch.commit();
   },
 };

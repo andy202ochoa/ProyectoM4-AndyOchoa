@@ -6,36 +6,33 @@ import { generateId } from '../utils';
 export function useNotes(uid: string) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
-  const isInitialLoad = useRef(true);
+  const notesRef = useRef<Note[]>([]);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<NoteColor | 'todos'>('todos');
 
-  // Cargar las notas del usuario desde Firestore (al montar o si cambia el uid)
+  // Mantener una referencia siempre actualizada para leer el estado
+  // actual dentro de callbacks sin depender de closures viejas
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
+
+  // Cargar las notas del usuario (filtradas por userId) al montar o si cambia el uid
   useEffect(() => {
     let cancelled = false;
-    isInitialLoad.current = true;
     setLoading(true);
 
     StorageService.getNotes(uid).then((data) => {
       if (cancelled) return;
       setNotes(data);
       setLoading(false);
-      isInitialLoad.current = false;
     });
 
     return () => {
       cancelled = true;
     };
   }, [uid]);
-
-  // Sincronizar automáticamente con Firestore cada vez que cambian las notas
-  // (se omite justo después de la carga inicial para no reescribir con lo mismo)
-  useEffect(() => {
-    if (isInitialLoad.current) return;
-    StorageService.saveNotes(uid, notes);
-  }, [uid, notes]);
 
   // Agregar una nota
   const addNote = useCallback((noteData: {
@@ -57,43 +54,45 @@ export function useNotes(uid: string) {
     };
 
     setNotes((prev) => [newNote, ...prev]);
+    StorageService.upsertNote(uid, newNote);
     return newNote;
-  }, []);
+  }, [uid]);
 
   // Actualizar una nota
   const updateNote = useCallback((id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => {
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === id
-          ? {
-            ...n,
-            ...updates,
-            updatedAt: new Date().toISOString(),
-          }
-          : n
-      )
-    );
-  }, []);
+    const current = notesRef.current.find((n) => n.id === id);
+    if (!current) return;
+
+    const updatedNote: Note = {
+      ...current,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setNotes((prev) => prev.map((n) => (n.id === id ? updatedNote : n)));
+    StorageService.upsertNote(uid, updatedNote);
+  }, [uid]);
 
   // Eliminar una nota
   const deleteNote = useCallback((id: string) => {
     setNotes((prev) => prev.filter((n) => n.id !== id));
+    StorageService.removeNote(id);
   }, []);
 
   // Alternar fijado de nota (Pin / Unpin)
   const togglePinNote = useCallback((id: string) => {
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === id
-          ? {
-            ...n,
-            isPinned: !n.isPinned,
-            updatedAt: new Date().toISOString(),
-          }
-          : n
-      )
-    );
-  }, []);
+    const current = notesRef.current.find((n) => n.id === id);
+    if (!current) return;
+
+    const updatedNote: Note = {
+      ...current,
+      isPinned: !current.isPinned,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setNotes((prev) => prev.map((n) => (n.id === id ? updatedNote : n)));
+    StorageService.upsertNote(uid, updatedNote);
+  }, [uid]);
 
   // Extraer todas las etiquetas únicas existentes
   const allTags = useMemo(() => {
@@ -105,13 +104,9 @@ export function useNotes(uid: string) {
   // Notas filtradas por búsqueda, etiqueta y color
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
-      // Filtro de color
       if (selectedColor !== 'todos' && note.color !== selectedColor) return false;
-
-      // Filtro de etiqueta
       if (selectedTag && !note.tags.includes(selectedTag)) return false;
 
-      // Filtro de búsqueda
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchTitle = note.title.toLowerCase().includes(query);
