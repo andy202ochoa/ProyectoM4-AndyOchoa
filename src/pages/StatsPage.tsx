@@ -12,10 +12,10 @@ import './pages.css';
 interface StatsPageProps {
   taskHook: ReturnType<typeof useTasks>;
   noteHook: ReturnType<typeof useNotes>;
-  onRefreshData?: () => void;
+  uid: string;
 }
 
-export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
+export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid }) => {
   const { tasks } = taskHook;
   const { notes } = noteHook;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +59,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
 
   // Manejo de exportación
   const handleExport = () => {
-    StorageService.exportData();
+    StorageService.exportData(uid);
     showNotification('¡Copia de seguridad descargada con éxito!');
   };
 
@@ -68,11 +68,11 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
+  const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const content = event.target?.result as string;
-        const success = StorageService.importData(content);
+        const success = StorageService.importData(uid, content);
         if (success) {
           showNotification('¡Datos importados correctamente! Recargando vista...');
           setTimeout(() => window.location.reload(), 800);
@@ -92,7 +92,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook }) => {
       '¿Deseas restablecer las tareas y notas de demostración? Esto reemplazará tus cambios actuales.'
     );
     if (confirmed) {
-      StorageService.resetToDefaults();
+      StorageService.resetToDefaults(uid);
       showNotification('¡Datos de demostración restablecidos! Recargando...');
       setTimeout(() => window.location.reload(), 600);
     }

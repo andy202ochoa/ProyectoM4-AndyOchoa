@@ -3,17 +3,22 @@ import { PriorityFilter, SubTask, Task, TaskCategory, TaskFilter, TaskPriority, 
 import { StorageService } from '../services';
 import { generateId, isOverdue } from '../utils';
 
-export function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>(() => StorageService.getTasks());
+export function useTasks(uid: string) {
+  const [tasks, setTasks] = useState<Task[]>(() => StorageService.getTasks(uid));
   const [statusFilter, setStatusFilter] = useState<TaskFilter>('todas');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('todas');
   const [categoryFilter, setCategoryFilter] = useState<TaskCategory | 'todas'>('todas');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Si cambia el usuario logueado, recarga las tareas de ESE usuario
+  useEffect(() => {
+    setTasks(StorageService.getTasks(uid));
+  }, [uid]);
+
   // Sincronizar automáticamente con localStorage
   useEffect(() => {
-    StorageService.saveTasks(tasks);
-  }, [tasks]);
+    StorageService.saveTasks(uid, tasks);
+  }, [uid, tasks]);
 
   // Agregar una nueva tarea
   const addTask = useCallback((taskData: {

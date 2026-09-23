@@ -130,15 +130,18 @@ export const INITIAL_NOTES: Note[] = [
   },
 ];
 
+// Construye una clave de localStorage única por usuario
+const scopedKey = (base: string, uid: string) => `${base}_${uid}`;
+
 export const StorageService = {
   /**
-   * Obtiene la lista de tareas de localStorage (o seed data si es primera vez)
+   * Obtiene la lista de tareas del usuario (o seed data si es primera vez)
    */
-  getTasks(): Task[] {
+  getTasks(uid: string): Task[] {
     try {
-      const stored = localStorage.getItem(TASKS_STORAGE_KEY);
+      const stored = localStorage.getItem(scopedKey(TASKS_STORAGE_KEY, uid));
       if (!stored) {
-        this.saveTasks(INITIAL_TASKS);
+        this.saveTasks(uid, INITIAL_TASKS);
         return INITIAL_TASKS;
       }
       return JSON.parse(stored);
@@ -149,24 +152,24 @@ export const StorageService = {
   },
 
   /**
-   * Guarda la lista de tareas en localStorage
+   * Guarda la lista de tareas del usuario en localStorage
    */
-  saveTasks(tasks: Task[]): void {
+  saveTasks(uid: string, tasks: Task[]): void {
     try {
-      localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+      localStorage.setItem(scopedKey(TASKS_STORAGE_KEY, uid), JSON.stringify(tasks));
     } catch (e) {
       console.error('Error al guardar tareas:', e);
     }
   },
 
   /**
-   * Obtiene la lista de notas de localStorage (o seed data si es primera vez)
+   * Obtiene la lista de notas del usuario (o seed data si es primera vez)
    */
-  getNotes(): Note[] {
+  getNotes(uid: string): Note[] {
     try {
-      const stored = localStorage.getItem(NOTES_STORAGE_KEY);
+      const stored = localStorage.getItem(scopedKey(NOTES_STORAGE_KEY, uid));
       if (!stored) {
-        this.saveNotes(INITIAL_NOTES);
+        this.saveNotes(uid, INITIAL_NOTES);
         return INITIAL_NOTES;
       }
       return JSON.parse(stored);
@@ -177,18 +180,18 @@ export const StorageService = {
   },
 
   /**
-   * Guarda la lista de notas en localStorage
+   * Guarda la lista de notas del usuario en localStorage
    */
-  saveNotes(notes: Note[]): void {
+  saveNotes(uid: string, notes: Note[]): void {
     try {
-      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+      localStorage.setItem(scopedKey(NOTES_STORAGE_KEY, uid), JSON.stringify(notes));
     } catch (e) {
       console.error('Error al guardar notas:', e);
     }
   },
 
   /**
-   * Obtiene el tema actual ('dark' | 'light')
+   * Obtiene el tema actual ('dark' | 'light') — es por dispositivo, no por usuario
    */
   getTheme(): 'dark' | 'light' {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
@@ -209,12 +212,12 @@ export const StorageService = {
   },
 
   /**
-   * Exporta todos los datos como archivo JSON descargable
+   * Exporta todos los datos del usuario como archivo JSON descargable
    */
-  exportData(): void {
+  exportData(uid: string): void {
     const data = {
-      tasks: this.getTasks(),
-      notes: this.getNotes(),
+      tasks: this.getTasks(uid),
+      notes: this.getNotes(uid),
       exportedAt: new Date().toISOString(),
       version: '1.0.0',
     };
@@ -231,16 +234,16 @@ export const StorageService = {
   },
 
   /**
-   * Importa datos desde una cadena JSON
+   * Importa datos desde una cadena JSON hacia el espacio del usuario
    */
-  importData(jsonString: string): boolean {
+  importData(uid: string, jsonString: string): boolean {
     try {
       const parsed = JSON.parse(jsonString);
       if (Array.isArray(parsed.tasks)) {
-        this.saveTasks(parsed.tasks);
+        this.saveTasks(uid, parsed.tasks);
       }
       if (Array.isArray(parsed.notes)) {
-        this.saveNotes(parsed.notes);
+        this.saveNotes(uid, parsed.notes);
       }
       return true;
     } catch (e) {
@@ -250,10 +253,10 @@ export const StorageService = {
   },
 
   /**
-   * Restablece los datos a las tareas y notas de demostración
+   * Restablece los datos del usuario a las tareas y notas de demostración
    */
-  resetToDefaults(): void {
-    this.saveTasks(INITIAL_TASKS);
-    this.saveNotes(INITIAL_NOTES);
+  resetToDefaults(uid: string): void {
+    this.saveTasks(uid, INITIAL_TASKS);
+    this.saveNotes(uid, INITIAL_NOTES);
   },
 };
