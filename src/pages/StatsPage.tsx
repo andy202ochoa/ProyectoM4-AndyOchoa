@@ -169,14 +169,12 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
     const body = [...lineasEncabezado, ...lineasCategorias, ...lineasPrioridad, ...lineasVencidas]
       .join('\n');
 
-    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Se abre el compositor web de Gmail en una pestaña nueva, en vez de mailto:,
+    // para no depender del cliente de correo predeterminado del sistema operativo
+    // (algunos equipos con Outlook mal configurado quedan en bucle con mailto:).
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    // Aviso si el cuerpo se acerca al límite práctico de longitud de un mailto:
-    if (mailtoUrl.length > 1800) {
-      showNotification('El resumen es extenso; algunos clientes de correo podrían truncarlo.');
-    }
-
-    window.location.href = mailtoUrl;
+    window.open(gmailUrl, '_blank');
   };
 
   return (
