@@ -151,14 +151,26 @@ export const StorageService = {
       const q = query(collection(db, TASKS_COLLECTION), where('userId', '==', uid));
       const snapshot = await getDocs(q);
 
-      if (snapshot.empty) {
-        // Primera vez del usuario: sembramos sus tareas de demostración
-        const batch = writeBatch(db);
-        INITIAL_TASKS.forEach((task) => {
-          batch.set(doc(db, TASKS_COLLECTION, task.id), { ...task, userId: uid });
-        });
+        if (snapshot.empty) {
+      const batch = writeBatch(db);
+
+      const tasksWithUser = INITIAL_TASKS.map((task) => {
+        const docRef = doc(collection(db, 'tasks'));
+
+        const taskData = {
+          ...task,
+          id: docRef.id,   // 🔥 USAR EL MISMO ID
+          userId: uid
+        };
+
+        batch.set(docRef, taskData);
+
+        return taskData; // ya incluye id correcto
+      });
+
         await batch.commit();
-        return INITIAL_TASKS;
+
+        return tasksWithUser;
       }
 
       return snapshot.docs.map((d) => {
@@ -213,13 +225,21 @@ export const StorageService = {
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) {
-        const batch = writeBatch(db);
-        INITIAL_NOTES.forEach((note) => {
-          batch.set(doc(db, NOTES_COLLECTION, note.id), { ...note, userId: uid });
-        });
+      const batch = writeBatch(db);
+
+      const notesWithUser = INITIAL_NOTES.map(note => ({
+      ...note,
+       userId: uid
+      }));
+
+       notesWithUser.forEach((note) => {
+        batch.set(doc(db, NOTES_COLLECTION, note.id), note);
+      });
+
         await batch.commit();
-        return INITIAL_NOTES;
-      }
+
+      return notesWithUser; // ✅ CORRECTO
+}
 
       return snapshot.docs.map((d) => {
         const { userId, ...note } = d.data() as Note & { userId: string };
