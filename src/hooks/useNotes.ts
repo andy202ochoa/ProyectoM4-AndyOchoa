@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Note, NoteColor } from '../types';
-import { StorageService } from '../services';
 import { generateId } from '../utils';
+import { getNotes, createNote, updateNote as updateNoteService, deleteNote as deleteNoteService } from '../services/noteService';
 
 export function useNotes(uid: string) {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -17,7 +17,7 @@ export function useNotes(uid: string) {
     notesRef.current = notes;
   }, [notes]);
 
-  // 🔥 CARGA INICIAL CON MANEJO DE ERRORES
+  // 🔥 CARGA INICIAL DESDE FIRESTORE
   useEffect(() => {
     let cancelled = false;
 
@@ -26,10 +26,11 @@ export function useNotes(uid: string) {
         setLoading(true);
         setError(null);
 
-        const data = await StorageService.getNotes(uid);
+        // Usamos la función getNotes de notesService.ts
+        const data = await getNotes();
 
         if (!cancelled) {
-          setNotes(data);
+          setNotes(data as Note[]);
         }
       } catch (err) {
         console.error(err);
@@ -50,7 +51,7 @@ export function useNotes(uid: string) {
     };
   }, [uid]);
 
-  // 🔥 ADD CON ROLLBACK
+  // 🔥 ADD CON ROLLBACK Y FIRESTORE
   const addNote = useCallback(async (noteData: {
     title: string;
     content: string;
@@ -58,32 +59,45 @@ export function useNotes(uid: string) {
     isPinned?: boolean;
     tags?: string[];
   }) => {
-    const newNote: Note = {
-      id: generateId(),
+    const tempId = generateId();
+    const newNotePayload = {
       title: noteData.title.trim(),
       content: noteData.content.trim(),
       color: noteData.color,
       isPinned: noteData.isPinned || false,
       tags: noteData.tags || [],
+    };
+
+    const tempNote: Note = {
+      ...newNotePayload,
+      id: tempId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    setNotes((prev) => [newNote, ...prev]);
+    // Actualización optimista en la UI
+    setNotes((prev) => [tempNote, ...prev]);
 
     try {
-      await StorageService.upsertNote(uid, newNote);
-      return newNote;
+      // Guardamos en Firestore
+      const createdNote = await createNote(newNotePayload);
+      
+      // Reemplazamos la nota temporal con la nota que incluye el ID generado por Firestore
+      setNotes((prev) =>
+      prev.map((n) => (n.id === tempId ? (createdNote as unknown as Note) : n))
+      );
+
+      return createdNote;
     } catch (err) {
       console.error(err);
 
-      // rollback
-      setNotes((prev) => prev.filter((n) => n.id !== newNote.id));
+      // Rollback en caso de error
+      setNotes((prev) => prev.filter((n) => n.id !== tempId));
       setError('No se pudo guardar la nota');
 
       throw err;
     }
-  }, [uid]);
+  }, []);
 
   // 🔥 UPDATE CON ROLLBACK
   const updateNote = useCallback(async (
@@ -104,15 +118,15 @@ export function useNotes(uid: string) {
     setNotes((prev) => prev.map((n) => (n.id === id ? updatedNote : n)));
 
     try {
-      await StorageService.upsertNote(uid, updatedNote);
+      await updateNoteService(id, updates);
     } catch (err) {
       console.error(err);
 
-      // rollback
+      // Rollback
       setNotes((prev) => prev.map((n) => (n.id === id ? previous : n)));
       setError('No se pudo actualizar la nota');
     }
-  }, [uid]);
+  }, []);
 
   // 🔥 DELETE CON ROLLBACK
   const deleteNote = useCallback(async (id: string) => {
@@ -121,11 +135,11 @@ export function useNotes(uid: string) {
     setNotes((prev) => prev.filter((n) => n.id !== id));
 
     try {
-      await StorageService.removeNote(id);
+      await deleteNoteService(id);
     } catch (err) {
       console.error(err);
 
-      // rollback
+      // Rollback
       setNotes(previous);
       setError('No se pudo eliminar la nota');
     }
@@ -136,31 +150,27 @@ export function useNotes(uid: string) {
     const current = notesRef.current.find((n) => n.id === id);
     if (!current) return;
 
-    const updatedNote: Note = {
-      ...current,
-      isPinned: !current.isPinned,
-      updatedAt: new Date().toISOString(),
-    };
+    const newPinStatus = !current.isPinned;
 
-    const previous = current;
-
-    setNotes((prev) => prev.map((n) => (n.id === id ? updatedNote : n)));
+    setNotes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isPinned: newPinStatus } : n))
+    );
 
     try {
-      await StorageService.upsertNote(uid, updatedNote);
+      await updateNoteService(id, { isPinned: newPinStatus });
     } catch (err) {
       console.error(err);
 
-      // rollback
-      setNotes((prev) => prev.map((n) => (n.id === id ? previous : n)));
+      // Rollback
+      setNotes((prev) => prev.map((n) => (n.id === id ? current : n)));
       setError('No se pudo actualizar la nota');
     }
-  }, [uid]);
+  }, []);
 
   // 🔹 TAGS
   const allTags = useMemo(() => {
     const tagsSet = new Set<string>();
-    notes.forEach((n) => n.tags.forEach((t) => tagsSet.add(t)));
+    notes.forEach((n) => n.tags?.forEach((t) => tagsSet.add(t)));
     return Array.from(tagsSet);
   }, [notes]);
 
@@ -168,13 +178,13 @@ export function useNotes(uid: string) {
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
       if (selectedColor !== 'todos' && note.color !== selectedColor) return false;
-      if (selectedTag && !note.tags.includes(selectedTag)) return false;
+      if (selectedTag && !note.tags?.includes(selectedTag)) return false;
 
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        const matchTitle = note.title.toLowerCase().includes(query);
-        const matchContent = note.content.toLowerCase().includes(query);
-        const matchTag = note.tags.some((t) => t.toLowerCase().includes(query));
+        const matchTitle = note.title?.toLowerCase().includes(query);
+        const matchContent = note.content?.toLowerCase().includes(query);
+        const matchTag = note.tags?.some((t) => t.toLowerCase().includes(query));
         if (!matchTitle && !matchContent && !matchTag) return false;
       }
 
