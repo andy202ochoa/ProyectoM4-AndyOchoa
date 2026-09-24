@@ -566,3 +566,25 @@
   border: 1px solid #ffb3b3;
   border-radius: 8px;
 }
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  border: none;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.stats-email-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.stats-email-icon {
+  font-size: 16px;
+  line-height: 1;
+}

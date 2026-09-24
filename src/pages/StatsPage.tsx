@@ -31,7 +31,8 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
   const completedTasks = tasks.filter((t) => t.status === 'completada').length;
   const pendingTasks = tasks.filter((t) => t.status === 'pendiente').length;
   const inProgressTasks = tasks.filter((t) => t.status === 'en_progreso').length;
-  const overdueTasks = tasks.filter((t) => isOverdue(t.dueDate, t.status)).length;
+  const overdueTasksList = tasks.filter((t) => isOverdue(t.dueDate, t.status));
+  const overdueTasks = overdueTasksList.length;
 
   const totalSubtasks = tasks.reduce((acc, t) => acc + t.subtasks.length, 0);
   const completedSubtasks = tasks.reduce(
@@ -118,6 +119,64 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
     } catch {
       showNotification('No se pudo cerrar sesión. Inténtalo de nuevo.');
     }
+  };
+
+  // Construye el texto del resumen (asunto + cuerpo) y abre el cliente de correo
+  const handleSendSummaryEmail = () => {
+    const subject = `Resumen de tareas — ${completionRate}% completado`;
+
+    const lineasEncabezado = [
+      `RESUMEN DE TAREAS`,
+      `Generado el ${new Date().toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+      ``,
+      `Índice de productividad: ${completionRate}% (${completedTasks}/${totalTasks} completadas)`,
+      `Pendientes: ${pendingTasks}`,
+      `En progreso: ${inProgressTasks}`,
+      `Completadas: ${completedTasks}`,
+      `Vencidas: ${overdueTasks}`,
+      `Subtareas: ${completedSubtasks}/${totalSubtasks} completadas`,
+      ``,
+    ];
+
+    const lineasCategorias = [
+      `POR CATEGORÍA`,
+      ...categories.map((cat) => {
+        const count = categoryCounts[cat] || 0;
+        return `- ${CATEGORY_CONFIG[cat].label}: ${count}`;
+      }),
+      ``,
+    ];
+
+    const lineasPrioridad = [
+      `POR PRIORIDAD`,
+      ...priorities.map((p) => {
+        const count = priorityCounts[p] || 0;
+        return `- ${PRIORITY_CONFIG[p].label}: ${count}`;
+      }),
+      ``,
+    ];
+
+    // Si hay tareas vencidas, se listan por nombre (hasta 10, para no exceder el límite de mailto)
+    const lineasVencidas = overdueTasks > 0
+      ? [
+        `TAREAS VENCIDAS`,
+        ...overdueTasksList.slice(0, 10).map((t) => `- ${t.title}`),
+        overdueTasksList.length > 10 ? `... y ${overdueTasksList.length - 10} más` : '',
+        ``,
+      ]
+      : [];
+
+    const body = [...lineasEncabezado, ...lineasCategorias, ...lineasPrioridad, ...lineasVencidas]
+      .join('\n');
+
+    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Aviso si el cuerpo se acerca al límite práctico de longitud de un mailto:
+    if (mailtoUrl.length > 1800) {
+      showNotification('El resumen es extenso; algunos clientes de correo podrían truncarlo.');
+    }
+
+    window.location.href = mailtoUrl;
   };
 
   return (
@@ -316,6 +375,29 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Envío de resumen por correo */}
+      <div
+        className="stats-section-card"
+      >
+        <h3 className="stats-section-title stats-data-title">
+          Compartir Resumen
+        </h3>
+        <p className="stats-data-description">
+          Abre tu programa de correo con un resumen del estado de tus tareas ya redactado.
+        </p>
+
+        <div className="stats-data-actions">
+          <button
+            type="button"
+            className="btn btn-primary stats-full-width-btn stats-email-btn"
+            onClick={handleSendSummaryEmail}
+          >
+            <span className="stats-email-icon" aria-hidden="true">✉️</span>
+            <span>Enviar Resumen por Correo</span>
+          </button>
         </div>
       </div>
 
