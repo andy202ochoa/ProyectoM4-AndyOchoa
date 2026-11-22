@@ -4,7 +4,8 @@ import { useTasks } from '../hooks/useTasks';
 import { useNotes } from '../hooks/useNotes';
 import { StorageService } from '../services';
 import { auth } from '../services/firebase';
-import { CATEGORY_CONFIG, PRIORITY_CONFIG, isOverdue } from '../utils';
+import { CATEGORY_CONFIG, PRIORITY_CONFIG, isOverdue, buildTaskSummary } from '../utils';
+import { sendTaskSummaryEmail } from '../services/emailService';
 import { ExportIcon, ResetIcon, SparklesIcon, TagIcon } from '../components/common/Icons';
 import { TaskCategory, TaskPriority } from '../types';
 import './pages.css';
@@ -20,6 +21,8 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
   const { notes } = noteHook;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [emailMessage, setEmailMessage] = useState('');
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -121,60 +124,27 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
     }
   };
 
-  // Construye el texto del resumen (asunto + cuerpo) y abre el cliente de correo
-  const handleSendSummaryEmail = () => {
-    const subject = `Resumen de tareas — ${completionRate}% completado`;
+  // Envía el resumen de tareas al correo del usuario con AWS SES,
+  // a través de la función serverless /api/send-summary (Vercel).
+  const handleSendSummaryEmail = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setEmailStatus('error');
+      setEmailMessage('Inicia sesión para enviar el resumen.');
+      return;
+    }
 
-    const lineasEncabezado = [
-      `RESUMEN DE TAREAS`,
-      `Generado el ${new Date().toLocaleDateString('es-EC', { year: 'numeric', month: 'long', day: 'numeric' })}`,
-      ``,
-      `Índice de productividad: ${completionRate}% (${completedTasks}/${totalTasks} completadas)`,
-      `Pendientes: ${pendingTasks}`,
-      `En progreso: ${inProgressTasks}`,
-      `Completadas: ${completedTasks}`,
-      `Vencidas: ${overdueTasks}`,
-      `Subtareas: ${completedSubtasks}/${totalSubtasks} completadas`,
-      ``,
-    ];
+    setEmailStatus('sending');
+    setEmailMessage('');
 
-    const lineasCategorias = [
-      `POR CATEGORÍA`,
-      ...categories.map((cat) => {
-        const count = categoryCounts[cat] || 0;
-        return `- ${CATEGORY_CONFIG[cat].label}: ${count}`;
-      }),
-      ``,
-    ];
-
-    const lineasPrioridad = [
-      `POR PRIORIDAD`,
-      ...priorities.map((p) => {
-        const count = priorityCounts[p] || 0;
-        return `- ${PRIORITY_CONFIG[p].label}: ${count}`;
-      }),
-      ``,
-    ];
-
-    // Si hay tareas vencidas, se listan por nombre (hasta 10, para no exceder el límite de mailto)
-    const lineasVencidas = overdueTasks > 0
-      ? [
-        `TAREAS VENCIDAS`,
-        ...overdueTasksList.slice(0, 10).map((t) => `- ${t.title}`),
-        overdueTasksList.length > 10 ? `... y ${overdueTasksList.length - 10} más` : '',
-        ``,
-      ]
-      : [];
-
-    const body = [...lineasEncabezado, ...lineasCategorias, ...lineasPrioridad, ...lineasVencidas]
-      .join('\n');
-
-    // Se abre el compositor web de Gmail en una pestaña nueva, en vez de mailto:,
-    // para no depender del cliente de correo predeterminado del sistema operativo
-    // (algunos equipos con Outlook mal configurado quedan en bucle con mailto:).
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-    window.open(gmailUrl, '_blank');
+    try {
+      await sendTaskSummaryEmail(user, buildTaskSummary(tasks));
+      setEmailStatus('sent');
+      setEmailMessage(`Resumen enviado a ${user.email}. Revisa tu bandeja (y la carpeta de spam).`);
+    } catch {
+      setEmailStatus('error');
+      setEmailMessage('No se pudo enviar el resumen. Inténtalo de nuevo en unos minutos.');
+    }
   };
 
   return (
@@ -384,7 +354,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
           Compartir Resumen
         </h3>
         <p className="stats-data-description">
-          Abre tu programa de correo con un resumen del estado de tus tareas ya redactado.
+          Te enviamos a tu correo un resumen del estado de todas tus tareas (vía AWS SES).
         </p>
 
         <div className="stats-data-actions">
@@ -392,11 +362,21 @@ export const StatsPage: React.FC<StatsPageProps> = ({ taskHook, noteHook, uid })
             type="button"
             className="btn btn-primary stats-full-width-btn stats-email-btn"
             onClick={handleSendSummaryEmail}
+            disabled={emailStatus === 'sending'}
           >
             <span className="stats-email-icon" aria-hidden="true">✉️</span>
-            <span>Enviar Resumen por Correo</span>
+            <span>{emailStatus === 'sending' ? 'Enviando...' : 'Enviar Resumen por Correo'}</span>
           </button>
         </div>
+
+        {emailMessage && (
+          <p
+            role={emailStatus === 'error' ? 'alert' : 'status'}
+            className={`stats-email-status ${emailStatus === 'error' ? 'is-error' : 'is-success'}`}
+          >
+            {emailMessage}
+          </p>
+        )}
       </div>
 
       {/* Gestión de Datos y Respaldos */}

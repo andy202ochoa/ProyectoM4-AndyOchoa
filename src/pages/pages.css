@@ -588,3 +588,18 @@
   font-size: 16px;
   line-height: 1;
 }
+
+/* Estado del envío del resumen por correo (AWS SES) */
+.stats-email-status {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.stats-email-status.is-success {
+  color: #10b981;
+}
+
+.stats-email-status.is-error {
+  color: #ef4444;
+}
