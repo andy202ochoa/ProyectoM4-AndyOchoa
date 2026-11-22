@@ -2,16 +2,18 @@
 // usando AWS SES. Reemplaza a la Cloud Function de Firebase (que exigía el
 // plan Blaze): en Vercel Hobby esto es gratis.
 //
+// No usa firebase-admin (sus dependencias fallan al cargarse en Vercel):
+// habla directo con las APIs REST oficiales de Firebase Auth.
+//
 // Flujo:
 //   1. El frontend manda el token de sesión de Firebase del usuario.
-//   2. Comprobamos el token con firebase-admin (así nadie puede usar esta
-//      función para mandar correos a direcciones ajenas).
-//   3. Firebase genera el enlace de verificación oficial (el mismo que
-//      marca emailVerified = true al abrirlo).
+//   2. Firebase confirma el token y nos dice su correo (así nadie puede usar
+//      esta función para mandar correos a direcciones ajenas).
+//   3. Con la cuenta de servicio pedimos a Firebase el enlace de verificación
+//      oficial (el mismo que marca emailVerified = true al abrirlo).
 //   4. Enviamos ese enlace con AWS SES, con nuestro propio diseño.
 
-import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
+import { createSign } from "node:crypto";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 // Tipos mínimos de la petición/respuesta de Vercel (evita instalar @vercel/node)
@@ -25,10 +27,17 @@ interface Res {
   setHeader: (name: string, value: string) => void;
 }
 
-// Variables de entorno (se configuran en Vercel, NUNCA con prefijo VITE_).
+interface ServiceAccount {
+  project_id: string;
+  client_email: string;
+  private_key: string;
+}
+
+// Variables de entorno (se configuran en Vercel).
 // Ojo: Vercel reserva los nombres AWS_*, por eso usamos SES_*.
 const {
   FIREBASE_SERVICE_ACCOUNT,
+  VITE_FIREBASE_API_KEY, // la API key pública de Firebase (ya está en Vercel)
   SES_ACCESS_KEY_ID,
   SES_SECRET_ACCESS_KEY,
   SES_REGION = "us-east-2",
@@ -36,13 +45,62 @@ const {
   APP_URL = "https://proyecto-m4-andy-ochoa.vercel.app",
 } = process.env;
 
-function getAdminAuth() {
-  if (!getApps().length) {
-    // FIREBASE_SERVICE_ACCOUNT = contenido completo del .json de la cuenta de servicio
-    const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT as string);
-    initializeApp({ credential: cert(serviceAccount) });
-  }
-  return getAuth();
+const IDENTITY_TOOLKIT = "https://identitytoolkit.googleapis.com/v1";
+
+const base64url = (input: string | Buffer) => Buffer.from(input).toString("base64url");
+
+/** Paso 2: Firebase valida el token del usuario y devuelve sus datos. */
+async function lookupUser(idToken: string) {
+  const response = await fetch(`${IDENTITY_TOOLKIT}/accounts:lookup?key=${VITE_FIREBASE_API_KEY}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!response.ok) return null; // token inválido o vencido
+  const data = (await response.json()) as { users?: { email?: string; emailVerified?: boolean }[] };
+  return data.users?.[0] ?? null;
+}
+
+/** Token de acceso de Google firmado con la cuenta de servicio (JWT RS256). */
+export async function getAccessToken(sa: ServiceAccount): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claims = base64url(
+    JSON.stringify({
+      iss: sa.client_email,
+      scope: "https://www.googleapis.com/auth/identitytoolkit https://www.googleapis.com/auth/cloud-platform",
+      aud: "https://oauth2.googleapis.com/token",
+      iat: now,
+      exp: now + 3600,
+    })
+  );
+  const signature = createSign("RSA-SHA256").update(`${header}.${claims}`).sign(sa.private_key);
+  const assertion = `${header}.${claims}.${base64url(signature)}`;
+
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+  const data = (await response.json()) as { access_token?: string; error_description?: string };
+  if (!data.access_token) throw new Error(`No se obtuvo token de Google: ${data.error_description ?? response.status}`);
+  return data.access_token;
+}
+
+/** Paso 3: enlace oficial de verificación (equivale a generateEmailVerificationLink). */
+async function generateVerificationLink(sa: ServiceAccount, email: string): Promise<string> {
+  const accessToken = await getAccessToken(sa);
+  const response = await fetch(`${IDENTITY_TOOLKIT}/projects/${sa.project_id}/accounts:sendOobCode`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ requestType: "VERIFY_EMAIL", email, returnOobLink: true, continueUrl: APP_URL }),
+  });
+  const data = (await response.json()) as { oobLink?: string; error?: { message?: string } };
+  if (!data.oobLink) throw new Error(`Firebase no devolvió el enlace: ${data.error?.message ?? response.status}`);
+  return data.oobLink;
 }
 
 function buildEmail(link: string) {
@@ -74,7 +132,7 @@ export default async function handler(req: Req, res: Res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  if (!FIREBASE_SERVICE_ACCOUNT || !SES_ACCESS_KEY_ID || !SES_SECRET_ACCESS_KEY || !SES_FROM_EMAIL) {
+  if (!FIREBASE_SERVICE_ACCOUNT || !VITE_FIREBASE_API_KEY || !SES_ACCESS_KEY_ID || !SES_SECRET_ACCESS_KEY || !SES_FROM_EMAIL) {
     console.error("Faltan variables de entorno para enviar la verificación.");
     return res.status(500).json({ error: "Servidor sin configurar" });
   }
@@ -88,19 +146,18 @@ export default async function handler(req: Req, res: Res) {
   }
 
   try {
-    const adminAuth = getAdminAuth();
-
-    // 2. Usamos el correo del token, no uno enviado por el cliente
-    const decoded = await adminAuth.verifyIdToken(idToken);
-    if (!decoded.email) {
-      return res.status(400).json({ error: "La cuenta no tiene correo" });
+    // 2. Usamos el correo que confirma Firebase, no uno enviado por el cliente
+    const user = await lookupUser(idToken);
+    if (!user?.email) {
+      return res.status(401).json({ error: "Sesión inválida" });
     }
-    if (decoded.email_verified) {
+    if (user.emailVerified) {
       return res.status(200).json({ sent: false, alreadyVerified: true });
     }
 
-    // 3. Enlace oficial de verificación de Firebase (al abrirlo vuelve a la app)
-    const link = await adminAuth.generateEmailVerificationLink(decoded.email, { url: APP_URL });
+    // 3. Enlace oficial de verificación de Firebase
+    const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT) as ServiceAccount;
+    const link = await generateVerificationLink(serviceAccount, user.email);
 
     // 4. Envío con AWS SES
     const ses = new SESClient({
@@ -112,7 +169,7 @@ export default async function handler(req: Req, res: Res) {
     const result = await ses.send(
       new SendEmailCommand({
         Source: `TaskFlow <${SES_FROM_EMAIL}>`,
-        Destination: { ToAddresses: [decoded.email] },
+        Destination: { ToAddresses: [user.email] },
         Message: {
           Subject: { Data: "Verifica tu correo — TaskFlow", Charset: "UTF-8" },
           Body: {
@@ -125,7 +182,7 @@ export default async function handler(req: Req, res: Res) {
 
     return res.status(200).json({ sent: true, messageId: result.MessageId });
   } catch (error) {
-    // Ej.: token inválido, o SES en sandbox con un destinatario sin verificar.
+    // Ej.: SES en sandbox con un destinatario sin verificar.
     // El frontend usará la verificación de Firebase como respaldo.
     console.error("Error enviando verificación con SES:", error);
     return res.status(502).json({ error: "No se pudo enviar el correo con SES" });
