@@ -182,9 +182,10 @@ export default async function handler(req: Req, res: Res) {
 
     return res.status(200).json({ sent: true, messageId: result.MessageId });
   } catch (error) {
-    // Ej.: SES en sandbox con un destinatario sin verificar.
-    // El frontend usará la verificación de Firebase como respaldo.
+    // Ej.: SES en sandbox con un destinatario sin verificar
+    // ("Email address is not verified"). El motivo se devuelve en "detail".
     console.error("Error enviando verificación con SES:", error);
-    return res.status(502).json({ error: "No se pudo enviar el correo con SES" });
+    const detail = error instanceof Error ? error.message : String(error);
+    return res.status(502).json({ error: "No se pudo enviar el correo con SES", detail });
   }
 }

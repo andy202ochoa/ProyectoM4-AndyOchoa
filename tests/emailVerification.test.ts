@@ -1,58 +1,44 @@
-// Prueba la lógica de envío de verificación: primero AWS SES (vía la
-// función de Vercel) y, si falla, el envío de Firebase como respaldo.
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+// Prueba el envío del correo de verificación con AWS SES (vía la función
+// /api/send-verification de Vercel), sin llamar a la red de verdad.
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { User } from 'firebase/auth';
-
-const mockSendEmailVerification = vi.fn();
-
-vi.mock('firebase/auth', () => ({
-  sendEmailVerification: (...args: unknown[]) => mockSendEmailVerification(...args),
-}));
-
 import { sendVerification } from '../src/services/emailVerification';
 
 const fakeUser = {
   getIdToken: vi.fn().mockResolvedValue('token-de-prueba'),
 } as unknown as User;
 
-describe('sendVerification (AWS SES con respaldo de Firebase)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
+describe('sendVerification (AWS SES)', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
-  it('usa AWS SES cuando la función responde bien', async () => {
+  it('llama a la función de Vercel con el token del usuario', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
     vi.stubGlobal('fetch', fetchMock);
 
-    const channel = await sendVerification(fakeUser);
-
-    expect(channel).toBe('ses');
+    await expect(sendVerification(fakeUser)).resolves.toBeUndefined();
     expect(fetchMock).toHaveBeenCalledWith('/api/send-verification', {
       method: 'POST',
       headers: { Authorization: 'Bearer token-de-prueba' },
     });
-    expect(mockSendEmailVerification).not.toHaveBeenCalled();
   });
 
-  it('usa Firebase como respaldo si SES responde con error', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 502 }));
+  it('lanza un error con el motivo si SES rechaza el envío', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: () => Promise.resolve({ error: 'No se pudo enviar', detail: 'Email address is not verified' }),
+    }));
 
-    const channel = await sendVerification(fakeUser);
-
-    expect(channel).toBe('firebase');
-    expect(mockSendEmailVerification).toHaveBeenCalledWith(fakeUser);
+    await expect(sendVerification(fakeUser)).rejects.toThrow('Email address is not verified');
   });
 
-  it('usa Firebase como respaldo si no hay conexión con la función', async () => {
+  it('propaga el error si no hay conexión con la función', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('sin red')));
 
-    const channel = await sendVerification(fakeUser);
-
-    expect(channel).toBe('firebase');
-    expect(mockSendEmailVerification).toHaveBeenCalledTimes(1);
+    await expect(sendVerification(fakeUser)).rejects.toThrow('sin red');
   });
 });

@@ -24,7 +24,7 @@ export const login = async (email: string, password: string): Promise<UserCreden
 
 export const register = async (email: string, password: string): Promise<UserCredential> => {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
-  // Correo de verificación con AWS SES (o Firebase como respaldo).
+  // Correo de verificación con AWS SES.
   // Si falla, la cuenta igual queda creada y puede reenviarlo luego.
   await sendVerification(credential.user).catch((error) =>
     console.warn("No se pudo enviar la verificación:", error)
