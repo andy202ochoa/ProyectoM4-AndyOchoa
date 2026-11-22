@@ -11,10 +11,13 @@ const mockSend = vi.fn();
  
 vi.mock('@aws-sdk/client-ses', () => {
   return {
-    SESClient: vi.fn().mockImplementation(() => ({
-      send: mockSend,
-    })),
-    SendEmailCommand: vi.fn().mockImplementation((input) => ({ input })),
+    // Vitest exige 'function' (no flecha) para mocks usados con 'new'
+    SESClient: vi.fn().mockImplementation(function () {
+      return { send: mockSend };
+    }),
+    SendEmailCommand: vi.fn().mockImplementation(function (input: unknown) {
+      return { input };
+    }),
   };
 });
  

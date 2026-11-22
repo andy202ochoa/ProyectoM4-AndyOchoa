@@ -2,19 +2,33 @@ import { auth } from "../services/firebase";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
-  sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
   UserCredential,
 } from "firebase/auth";
+import { sendVerification } from "./emailVerification";
 
 export const login = async (email: string, password: string): Promise<UserCredential> => {
-  return signInWithEmailAndPassword(auth, email, password);
+  const credential = await signInWithEmailAndPassword(auth, email, password);
+
+  // Si inicia sesión sin haber verificado su correo, le reenviamos el enlace.
+  // Un fallo aquí no debe impedir el inicio de sesión.
+  if (!credential.user.emailVerified) {
+    await sendVerification(credential.user).catch((error) =>
+      console.warn("No se pudo reenviar la verificación:", error)
+    );
+  }
+
+  return credential;
 };
 
 export const register = async (email: string, password: string): Promise<UserCredential> => {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
-  await sendEmailVerification(credential.user);
+  // Correo de verificación con AWS SES (o Firebase como respaldo).
+  // Si falla, la cuenta igual queda creada y puede reenviarlo luego.
+  await sendVerification(credential.user).catch((error) =>
+    console.warn("No se pudo enviar la verificación:", error)
+  );
   return credential;
 };
 

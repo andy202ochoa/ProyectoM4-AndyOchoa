@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { sendEmailVerification, signOut, User } from "firebase/auth";
+import { signOut, User } from "firebase/auth";
+import { sendVerification } from "../services/emailVerification";
 import { auth } from "../services/firebase";
 import "./auth.css";
 
@@ -17,7 +18,7 @@ export function VerifyEmailPage({ user }: VerifyEmailPageProps) {
     setError("");
     setIsResending(true);
     try {
-      await sendEmailVerification(user);
+      await sendVerification(user);
       setSent(true);
     } catch (err) {
       setError("No se pudo reenviar el correo. Intenta de nuevo en unos minutos.");
